@@ -99,6 +99,22 @@ struct TianfuGlassShortcutsProvider: AppShortcutsProvider {
             shortTitle: "诊断基础二维码",
             systemImageName: "qrcode.viewfinder"
         )
+        AppShortcut(
+            intent: InlineLoadingDiagnosticIntent(),
+            phrases: [
+                "用\(.applicationName)测试原位加载"
+            ],
+            shortTitle: "诊断原位加载",
+            systemImageName: "hourglass"
+        )
+        AppShortcut(
+            intent: ReloadLoadingDemoLauncherIntent(),
+            phrases: [
+                "用\(.applicationName)测试重载加载"
+            ],
+            shortTitle: "诊断重载加载",
+            systemImageName: "arrow.clockwise"
+        )
         // Independent control: if both this and the QR view show only Done,
         // the host is dropping views rather than the QR renderer failing.
         AppShortcut(
