@@ -58,7 +58,12 @@ enum TransitCodeAPIClient {
         configuration.urlCache = nil
         configuration.timeoutIntervalForRequest = 12
         configuration.timeoutIntervalForResource = 15
-        let session = URLSession(configuration: configuration)
+        // A transit Cookie must never be forwarded to a redirected host.
+        let session = URLSession(
+            configuration: configuration,
+            delegate: RejectTransitRedirects(),
+            delegateQueue: nil
+        )
         defer { session.invalidateAndCancel() }
 
         let data: Data
@@ -93,5 +98,19 @@ enum TransitCodeAPIClient {
         // This must remain the exact server-provided string, not decoded
         // or trimmed, and must never be persisted or printed.
         return code
+    }
+}
+
+/// Reject HTTP redirects rather than risking a credential-bearing request
+/// being forwarded off the explicitly configured transit HTTPS endpoint.
+private final class RejectTransitRedirects: NSObject, URLSessionTaskDelegate {
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest,
+        completionHandler: @escaping (URLRequest?) -> Void
+    ) {
+        completionHandler(nil)
     }
 }
