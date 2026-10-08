@@ -2,6 +2,39 @@ import AppIntents
 import Foundation
 import SwiftUI
 
+/// Preferred one-parameter Shortcut action. The existing V3 action is kept
+/// for compatibility with Shortcuts that already use the expiresIn field.
+struct ShowTransitCodeSimpleIntent: AppIntent {
+    static let title: LocalizedStringResource = "显示天府通乘车码"
+    static let description = IntentDescription("直接显示快捷指令提供的二维码，不需要设置有效期或打开 App。")
+    static let openAppWhenRun = false
+    static let isDiscoverable = true
+
+    @Parameter(title: "乘车码内容", description: "传入接口返回的 result.code 原始字符串。")
+    var payload: String
+
+    func perform() async throws -> some IntentResult & ShowsSnippetIntent {
+        try TransitCodePayloadValidation.check(payload)
+        return .result(
+            snippetIntent: TransitCodePresentationSnippetIntent(
+                payload: payload,
+                demo: false
+            )
+        )
+    }
+}
+
+enum TransitCodePayloadValidation {
+    static func check(_ payload: String) throws {
+        guard !payload.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw TransitCodeError.emptyPayload
+        }
+        guard payload.utf8.count <= 2_000 else {
+            throw TransitCodeError.payloadTooLong
+        }
+    }
+}
+
 struct ShowTransitCodeIntent: AppIntent {
     static let title: LocalizedStringResource = "显示天府通乘车码 V3"
     static let description = IntentDescription("接收快捷指令提供的 result.code 原文和有效期，不需要打开 App。")
@@ -15,21 +48,15 @@ struct ShowTransitCodeIntent: AppIntent {
     var expiresIn: Int
 
     func perform() async throws -> some IntentResult & ShowsSnippetIntent {
-        // Check for a blank input without changing the raw QR payload.
-        // Even whitespace or a trailing newline can change a QR's contents.
-        guard !payload.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw TransitCodeError.emptyPayload
-        }
-        guard payload.utf8.count <= 2_000 else {
-            throw TransitCodeError.payloadTooLong
-        }
+        // Retained for existing Shortcuts. The legacy expiresIn input is
+        // accepted but no longer shown in the snippet.
+        try TransitCodePayloadValidation.check(payload)
         guard (1...3_600).contains(expiresIn) else {
             throw TransitCodeError.invalidLifetime
         }
         return .result(
             snippetIntent: TransitCodePresentationSnippetIntent(
                 payload: payload,
-                lifetime: expiresIn,
                 demo: false
             )
         )
@@ -43,17 +70,13 @@ struct TransitCodePresentationSnippetIntent: SnippetIntent {
     @Parameter(title: "二维码内容")
     var payload: String
 
-    @Parameter(title: "有效期")
-    var lifetime: Int
-
     @Parameter(title: "演示模式")
     var demo: Bool
 
     init() {}
 
-    init(payload: String, lifetime: Int, demo: Bool) {
+    init(payload: String, demo: Bool) {
         self.payload = payload
-        self.lifetime = lifetime
         self.demo = demo
     }
 
@@ -64,7 +87,6 @@ struct TransitCodePresentationSnippetIntent: SnippetIntent {
         }
         return .result(view: VectorTransitCodeSnippetView(
             matrix: matrix,
-            lifetime: lifetime,
             demo: demo
         ))
     }
@@ -108,7 +130,6 @@ struct GlassQRDiagnosticIntent: AppIntent {
         return .result(
             snippetIntent: TransitCodePresentationSnippetIntent(
                 payload: "TIANFU-GLASS-V3-TEST-ONLY-NOT-VALID-FOR-TRAVEL",
-                lifetime: 60,
                 demo: true
             )
         )
