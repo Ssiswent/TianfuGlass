@@ -1,10 +1,19 @@
 # TianfuGlass · 天府通 Glass
 
-当前候选版本：**v0.8.4（Build 23）**。
+当前候选版本：**v0.8.5（Build 24）**。
 
 > 本仓库是公开仓库。禁止在源码、CI、README、日志、截图及 Issues 中上传真实 Cookie、TGT、Token 或动态乘车码。用户此前在对话中展示过会话凭证，建议通过官方渠道重新登录使旧凭证失效。
 
-## v0.8.4 · 固定高度加载实验（不修改真实取码）
+## v0.8.5 · 正式取码回归恢复（无异步加载实验）
+
+- **已确认的真机回归：** v0.8.4 两个新加载诊断不显示二维码，且「获取天府通乘车码」正式入口也不再显示二维码。这是一次正式取码回归，优先恢复功能，不再尝试异步 UI 实验。
+- **恢复基线：** `Sources/TianfuGlassAppShortcuts.swift` 已完整恢复为 v0.8.3（Build 22、commit `b43d6ecbf572abf05061a2393e9e11729055f588`）的源码，去掉新增「诊断原位加载」和「诊断重载加载」注册入口；整个 `Sources/TransitLoadingSnippetDiagnostics.swift` 失败实验文件已删除。
+- **未改动的文件：** `TransitCodeAPIClient.swift`、`TransitCookieStore.swift`、`QRCodeVectorSnippetView.swift`，与已显示正式乘车码的 v0.8.3 完全一致。此前已通过的「演示天府通乘车码」、「诊断基础二维码」、「诊断文字弹窗」依旧保留。
+- **验证门槛：** GitHub Actions 的 Xcode 27 构建、IPA 打包、Release 发布先通过；然后在 iOS 27 真机只测试「演示天府通乘车码」和「获取天府通乘车码」。若正式取码仍异常，记录无敏感信息的错误提示与现象，不要把 Cookie 或真实码上传仓库。
+- 本次不是对 Snippet 系统根因的确定诊断。不能断言「新增操作」必然导致故障；这是把功能退回已经观察到可用的源码状态，用独立 Build 24 验证恢复。
+- **保留 v0.8.3 的取码后等待期间高度跳动**，不声称已修复。直到稳定取码重新通过，停止迭代动态 loading/reload 效果。
+
+## v0.8.4 · 固定高度加载实验（失败，已撤回）（不修改真实取码）
 
 - iOS 27 真机反馈：v0.8.3 的正式 API 乘车码能够显示，但因为 `FetchFreshTransitCodeIntent.perform()` 先等待网络完成再返回视图，系统提前显示只有 Done 的矮弹层，之后才突然扩展成二维码卡片。
 - Apple 的 `SnippetIntent` 建议尽快返回视图、避免长时间阻塞 `perform()`；公开的 `SnippetIntent.reload()` 可在底层数据变化时更新已显示 Snippet。但宿主弹层的最初呈现与尺寸动画属于 iOS 控制范围。
