@@ -90,17 +90,13 @@ struct VectorTransitCodeSnippetView: View {
 
     var body: some View {
         VStack(spacing: 9) {
-            // Keep the glyph above its glass background, so the symbol
-            // remains visible even if the system composites nested glass
-            // differently within an App Intents Snippet.
+            // A single native glass circle surrounds the transit symbol.
+            // Keep the QR code itself opaque and independent of glass.
             Image(systemName: "tram.fill")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(.primary)
-                .frame(width: 40, height: 40)
-                .background {
-                    Circle()
-                        .glassEffect(.regular, in: .circle)
-                }
+                .frame(width: 48, height: 48)
+                .glassEffect(.regular, in: .circle)
                 .accessibilityLabel("天府通乘车码")
                 .frame(maxWidth: .infinity, alignment: .center)
 
