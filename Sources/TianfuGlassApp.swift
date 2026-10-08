@@ -26,7 +26,7 @@ private struct TianfuGlassHomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Label("天府通 · Glass v0.5.0", systemImage: "tram.fill")
+                    Label("天府通 · Glass v0.5.1", systemImage: "tram.fill")
                         .font(.title2.bold())
 
                     Text("所有测试均离线运行，不需要 Cookie、网络或真实乘车码。")
