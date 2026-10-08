@@ -1,8 +1,17 @@
 # TianfuGlass · 天府通 Glass
 
-当前候选版本：**v0.8.1（Build 20）**。
+当前候选版本：**v0.8.2（Build 21）**。
 
 > 本仓库是公开仓库。禁止在源码、CI、README、日志、截图及 Issues 中上传真实 Cookie、TGT、Token 或动态乘车码。用户此前在对话中展示过会话凭证，建议通过官方渠道重新登录使旧凭证失效。
+
+## v0.8.2 · 针对「文字 PASS / 二维码 Done-only」的隔离诊断
+
+- iOS 27 真机结果：**v0.8.1「诊断文字弹窗」PASS**，但 **「演示天府通乘车码」FAIL（只有系统 Done）**。这表明宿主至少能正确呈现文字 Snippet，不能再把问题笼统归咎为未注册 App Shortcut。
+- 只改**离线演示**，使 `PreviewTransitCodeIntent` 显式遵守 `SnippetIntent`，在其 `perform()` 内返回沿用的 `VectorTransitCodeSnippetView`。这是测试是否需要 SnippetIntent 的原生呈现环境，**不是已确认的根因或通过验收的修复**。
+- 新增自动注册操作 **「诊断基础二维码」**：返回简单标题、`QRCodeModulesShape` 和演示提示，不包含图标、Glass 或完整布局。与正常演示作对照，判断是基本 QR Shape 还是复杂视图导致显示失败。
+- **运行顺序：先「演示天府通乘车码」，如果仍 Done-only，再「诊断基础二维码」。** 文字已 PASS，无需重复测。注意新诊断只使用虚构数据。
+- **正式「获取天府通乘车码」API Intent、会话 Keychain、已被闸机验证的原有 QR 画法完全不改**。真实接口入口目前还没有经过真机呈现验收，不要以这次离线试验推断真实码功能正常。
+- 不干预系统弹层与动画，不要求禁用系统动态效果。待对照结果明确后再选择最小的正式入口修复。
 
 ## v0.8.1 · App Shortcuts 空白 Snippet 修复候选
 
