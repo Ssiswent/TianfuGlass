@@ -1,5 +1,29 @@
 # TianfuGlass · 天府通 Glass
 
+当前候选版本：**v0.8.0（Build 19）**。
+
+> 本仓库是公开仓库。禁止在源码、CI、README、日志、截图及 Issues 中上传真实 Cookie、TGT、Token 或动态乘车码。用户此前在对话中展示过会话凭证，建议通过官方渠道重新登录使旧凭证失效。
+
+## v0.8.0 · 由 App 自动取码并悬浮展示
+
+- 新增无参数「获取天府通乘车码」App Shortcut，通过后台 URLSession POST 请求固定的 HTTPS 天府通 API，并把有效 result.code 原文交给现有 SnippetIntent。
+- 新增「演示天府通乘车码」App Shortcut，无需网络或 Cookie，便于验证系统自动发现的入口。
+- App 内新增「登录会话」设置：用户**首次自行粘贴 Cookie 字符串**（包含 TGT，不含 cookie: 前缀）。使用设备 Keychain 的 WhenUnlockedThisDeviceOnly 方式保存、覆盖、清除。不会保存到 UserDefaults、App Shortcut 参数或项目文件。
+- 不直接嵌入用户提供过的真实 Cookie。API 客户端禁用缓存和 cookie jar、设置 12 秒超时，验证 HTTP 状态、返回结构、绑定状态及二维码原文，不保存实时二维码，也不在错误提示中回显响应/凭证。
+- 继续保留旧的「显示天府通乘车码」和 V3 操作，复用已在地铁闸机成功识别的黑白矢量二维码、纯白静区、系统 Done 与 Liquid Glass。
+
+### 建议验收顺序
+
+1. 安装候选 IPA，首次打开 App，在「登录会话」中保存自己当前有效 Cookie。
+2. 在 Spotlight、Siri 或「快捷指令」App 的 TianfuGlass 操作列表找到「演示天府通乘车码」，验证是否不打开主界面就能悬浮显示演示二维码。
+3. 再运行「获取天府通乘车码」，检查是否能自动请求新的 result.code 并展示。每次执行请求新码，不使用旧码缓存。
+4. 验证会话失效、网络失败和服务端无效响应都有明确错误；最后在地铁闸机验收真实取码链路。
+
+**不能只凭 Xcode 构建就认定 iOS 27 的自动发现和后台 Snippet 已真机通过**。是否能在 Spotlight、Siri 或其他触发入口显示，由系统运行环境决定。自定义 ControlWidget 仍不能直接展示 Snippet。当前不支持自动续期、后台扫码成功回调或自动关闭系统 Snippet。
+
+---
+## 历史版本
+
 iOS 26+ / iOS 27 SwiftUI + App Intents Snippet，用于在 iPhone「快捷指令」中直接展示天府通乘车二维码，不打开 App 主界面。
 
 当前测试版本 **v0.7.2 (Build 18)**。**仓库为 Public**：禁止提交真实 Cookie、TGT、Token、动态二维码内容或包含账号信息的快捷指令。
