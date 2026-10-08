@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/build-unsigned-ipa.yml"
       - "Sources/**"
+      - "scripts/**"
       - "project.yml"
 
 permissions:
@@ -29,6 +30,12 @@ jobs:
         run: |
           xcodebuild -version
           xcrun --sdk iphoneos --show-sdk-version
+
+      - name: Render original App Icon
+        run: |
+          swift scripts/generate_app_icon.swift
+          test -s Sources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
+          sips -g pixelWidth -g pixelHeight Sources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
 
       - name: Generate Xcode project
         run: |
@@ -60,6 +67,10 @@ jobs:
           set -euo pipefail
           APP="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos/TianfuGlass.app"
           test -f "$APP/Info.plist"
+          test -f "$APP/Assets.car"
+          ICON_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' "$APP/Info.plist")"
+          test "$ICON_NAME" = "AppIcon"
+          echo "Verified primary icon: $ICON_NAME"
           VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist")"
           BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist")"
           IPA="TianfuGlass-v${VERSION}-build${BUILD}-unsigned.ipa"
@@ -106,6 +117,7 @@ jobs:
             echo "- Diagnostic build: on-device App Intents Snippet behavior requires validation."
           } > "$RUNNER_TEMP/release-notes.md"
           gh release create "$TAG" "$IPA_NAME" "$IPA_NAME.sha256" \
+            "Sources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "TianfuGlass v${APP_VERSION} (build ${APP_BUILD}, CI #${GITHUB_RUN_NUMBER})" \
