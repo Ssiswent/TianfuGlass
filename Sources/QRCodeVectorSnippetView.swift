@@ -38,9 +38,11 @@ struct QRCodeMatrix: Sendable {
         }
 
         // Black QR cells have near-zero RGB, white cells have near-255 RGB.
-        let cells = (0 ..< height).flatMap { row in
-            (0 ..< width).map { col in
-                rgba[row * bytesPerRow + col * 4] < 128
+        var cells: [Bool] = []
+        cells.reserveCapacity(width * height)
+        for row in 0 ..< height {
+            for col in 0 ..< width {
+                cells.append(rgba[row * bytesPerRow + col * 4] < 128)
             }
         }
         return QRCodeMatrix(side: width, dark: cells)
