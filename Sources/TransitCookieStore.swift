@@ -60,7 +60,7 @@ enum TransitCookieStore {
             query as CFDictionary,
             [kSecValueData as String: data] as CFDictionary
         )
-        if status == errSecItemSuccess { return }
+        if status == errSecSuccess { return }
         guard status == errSecItemNotFound else { throw StoreError.keychainFailure }
 
         var attributes = query
