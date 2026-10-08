@@ -1,8 +1,16 @@
 # TianfuGlass · 天府通 Glass
 
-当前候选版本：**v0.8.0（Build 19）**。
+当前候选版本：**v0.8.1（Build 20）**。
 
 > 本仓库是公开仓库。禁止在源码、CI、README、日志、截图及 Issues 中上传真实 Cookie、TGT、Token 或动态乘车码。用户此前在对话中展示过会话凭证，建议通过官方渠道重新登录使旧凭证失效。
+
+## v0.8.1 · App Shortcuts 空白 Snippet 修复候选
+
+- iOS 27 真机反馈：v0.8.0 自动注册的「演示天府通乘车码」在快捷指令 App 执行时仅出现系统 Done 按钮，二维码内容缺失；**不能认定新 App Shortcuts 已经成功显示**。
+- 修复实验：自动注册的「演示天府通乘车码」和「获取天府通乘车码」改为由 App Intent 的 `perform()` 直接返回 `ShowsSnippetView`，不再通过第二层 `TransitCodePresentationSnippetIntent` 转发。复用原有 `QRCodeMatrix` 和 `VectorTransitCodeSnippetView`，未更改二维码绘制、Cookie 和网络行为。
+- 同时自动注册「诊断文字弹窗」作为对照，直接调用历史已通过的 `GlassDirectViewDiagnosticIntent`。验收先运行文字诊断，再运行演示二维码，最后才运行真实 API 取码。
+- **该版本属于有边界的诊断候选**。不能以 Xcode 编译成功代替真实 iOS 27 Snippet 展示；仍需真机验证。此前成功的「显示天府通乘车码」/V3 兼容入口不修改。
+- 保留由系统管理的 Liquid Glass、Done、弹层位置和入场动画；不关闭设备动态效果。
 
 ## v0.8.0 · 由 App 自动取码并悬浮展示
 
