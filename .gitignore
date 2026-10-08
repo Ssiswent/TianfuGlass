@@ -7,3 +7,4 @@ build/
 *.xcarchive
 *.dSYM
 TianfuGlass.xcodeproj/
+Sources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
