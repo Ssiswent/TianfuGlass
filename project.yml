@@ -16,7 +16,9 @@ targets:
       - name: Generate reproducible AppIcon
         script: |
           cd "$PROJECT_DIR"
-          /usr/bin/swift scripts/generate_app_icon.swift
+          if [ ! -s "Sources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png" ]; then
+            SDKROOT="$(xcrun --sdk macosx --show-sdk-path)" /usr/bin/swift scripts/generate_app_icon.swift
+          fi
         basedOnDependencyAnalysis: false
     settings:
       base:
