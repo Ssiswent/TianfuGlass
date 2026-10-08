@@ -26,7 +26,7 @@ private struct TianfuGlassHomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Label("天府通 · Glass v0.4.0", systemImage: "tram.fill")
+                    Label("天府通 · Glass v0.5.0", systemImage: "tram.fill")
                         .font(.title2.bold())
 
                     Text("所有测试均离线运行，不需要 Cookie、网络或真实乘车码。")
@@ -91,7 +91,7 @@ private struct TianfuGlassHomeView: View {
                         Text("下一步：在「快捷指令」中运行 A 和 C").font(.headline)
                         Text("• A：Glass 诊断 A · 纯文字（SnippetIntent 路径）")
                         Text("• C：Glass 诊断 C · 直接返回文字（静态视图路径）")
-                        Text("如果 App 原生弹窗正常、A/C 仍只有 Done，则应继续调查系统调用环境，而不是二维码生成。")
+                        Text("A/C 已在快捷指令中通过。现在先运行「Glass 诊断 D · 参数化文字」，再运行 B 检查纯矢量二维码。")
                     }
                     .font(.subheadline)
                     .padding(16)
