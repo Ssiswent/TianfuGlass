@@ -188,6 +188,12 @@ struct GlassParameterizedTextSnippetIntent: SnippetIntent {
                     .font(.subheadline)
             }
             .padding(16)
+            .frame(width: 292, alignment: .leading)
+            .contentTransition(.identity)
+            .transaction { transaction in
+                transaction.animation = nil
+                transaction.disablesAnimations = true
+            }
         )
     }
 }
