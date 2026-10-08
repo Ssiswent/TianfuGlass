@@ -90,13 +90,18 @@ struct VectorTransitCodeSnippetView: View {
 
     var body: some View {
         VStack(spacing: 9) {
-            // A single native glass circle surrounds the transit symbol.
-            // Keep the QR code itself opaque and independent of glass.
+            // Keep the symbol itself outside the glass effect. Applying
+            // glassEffect directly to Image made this glyph disappear in
+            // the iOS 27 Shortcuts Snippet (observed in v0.6.5).
+            // Restore the v0.6.4 presentation confirmed on-device.
             Image(systemName: "tram.fill")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(.primary)
-                .frame(width: 48, height: 48)
-                .glassEffect(.regular, in: .circle)
+                .frame(width: 40, height: 40)
+                .background {
+                    Circle()
+                        .glassEffect(.regular, in: .circle)
+                }
                 .accessibilityLabel("天府通乘车码")
                 .frame(maxWidth: .infinity, alignment: .center)
 
