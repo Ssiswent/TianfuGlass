@@ -26,15 +26,29 @@ private struct TianfuGlassHomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Label("天府通 · Glass v0.5.1", systemImage: "tram.fill")
+                    Label("天府通 · Glass v0.6.0", systemImage: "tram.fill")
                         .font(.title2.bold())
 
-                    Text("所有测试均离线运行，不需要 Cookie、网络或真实乘车码。")
+                    Text("运行快捷指令即可显示乘车码，无需先打开此 App。真实 Cookie 和接口请求仍留在你自己的快捷指令中。")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
 
+                    VStack(alignment: .leading, spacing: 10) {
+                        Label("快捷指令接入", systemImage: "bolt.fill")
+                            .font(.headline)
+                        Text("① 请求接口并取得 result.code。")
+                        Text("② 添加「显示天府通乘车码 V3」，把乘车码内容设为 code，有效期先填 60 秒。")
+                        Text("③ 确认成功后，可改用接口返回的 expiresIn。重新运行快捷指令才会获取新码。")
+                        Text("提示：Snippet 的出现位置、Done 按钮和系统动画由 iOS 控制。")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.subheadline)
+                    .padding(16)
+                    .glassEffect(.regular, in: .rect(cornerRadius: 22))
+
                     VStack(alignment: .leading, spacing: 12) {
-                        Label("第一组 · App 原生弹窗", systemImage: "rectangle.on.rectangle")
+                        Label("离线测试 · App 原生弹窗", systemImage: "rectangle.on.rectangle")
                             .font(.headline)
                         Text("检验 SwiftUI 渲染。这里是 App 自己展示的 sheet，不代表系统 Snippet 能正常工作。")
                             .font(.caption)
@@ -60,7 +74,7 @@ private struct TianfuGlassHomeView: View {
                     .glassEffect(.regular, in: .rect(cornerRadius: 22))
 
                     VStack(alignment: .leading, spacing: 12) {
-                        Label("第二组 · 运行 App Intent", systemImage: "bolt.horizontal.circle")
+                        Label("离线测试 · App Intent", systemImage: "bolt.horizontal.circle")
                             .font(.headline)
                         Text("尝试由系统呈现 Snippet。按钮运行 Intent，但系统是否展示结果由触发场景决定。")
                             .font(.caption)
@@ -88,10 +102,10 @@ private struct TianfuGlassHomeView: View {
                     .glassEffect(.regular, in: .rect(cornerRadius: 22))
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("下一步：在「快捷指令」中运行 A 和 C").font(.headline)
-                        Text("• A：Glass 诊断 A · 纯文字（SnippetIntent 路径）")
-                        Text("• C：Glass 诊断 C · 直接返回文字（静态视图路径）")
-                        Text("A/C 已在快捷指令中通过。现在先运行「Glass 诊断 D · 参数化文字」，再运行 B 检查纯矢量二维码。")
+                        Text("诊断说明").font(.headline)
+                        Text("A、C、D 和 B 已分别通过快捷指令真机测试。")
+                        Text("当前正式入口是「显示天府通乘车码 V3」，请先传入无敏感信息的测试字符串验证完整路径。")
+                        Text("不要公开分享包含 Cookie、会话令牌或真实乘车码的快捷指令。")
                     }
                     .font(.subheadline)
                     .padding(16)
