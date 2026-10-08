@@ -67,6 +67,13 @@ func gradientFill(_ path: CGPath, colors: [CGColor], start: CGPoint, end: CGPoin
     context.restoreGState()
 }
 
+// The v0.7.1 glyph occupied too little of the icon. Scale the artwork
+// (but never the full-bleed blue background) by 20% around the canvas center.
+context.saveGState()
+context.translateBy(x: 512, y: 512)
+context.scaleBy(x: 1.20, y: 1.20)
+context.translateBy(x: -512, y: -512)
+
 // Rails sit behind the body and survive scaling to the Dynamic Island.
 context.saveGState()
 context.setStrokeColor(rgba(0xFFFFFF, alpha: 0.91))
@@ -89,22 +96,32 @@ let trainBody = roundedRect(CGRect(x: 300, y: 294, width: 424, height: 476), rad
 context.saveGState()
 context.setShadow(
     offset: CGSize(width: 0, height: -11),
-    blur: 25,
-    color: rgba(0x064FA9, alpha: 0.23)
+    blur: 30,
+    color: rgba(0x064FA9, alpha: 0.27)
 )
 fillPath(trainBody, color: rgba(0xFFFFFF))
 context.restoreGState()
 
 gradientFill(
     trainBody,
-    colors: [rgba(0xFFFFFF), rgba(0xEDF8FF), rgba(0xD9EDFE)],
+    colors: [rgba(0xFFFFFF), rgba(0xF4FBFF), rgba(0xCFE8FC)],
     start: CGPoint(x: 495, y: 776),
     end: CGPoint(x: 531, y: 292)
 )
-context.setStrokeColor(rgba(0xFFFFFF, alpha: 0.8))
-context.setLineWidth(3)
+// A thin specular rim makes the white body feel gently embossed at small sizes.
+context.setStrokeColor(rgba(0xFFFFFF, alpha: 0.86))
+context.setLineWidth(4)
 context.addPath(trainBody)
 context.strokePath()
+
+// Narrow glossy rim on the upper shell. No extra backing disc.
+let shellHighlight = roundedRect(CGRect(x: 332, y: 732, width: 360, height: 18), radius: 9)
+gradientFill(
+    shellHighlight,
+    colors: [rgba(0xFFFFFF, alpha: 0.48), rgba(0xFFFFFF, alpha: 0.06)],
+    start: CGPoint(x: 348, y: 752),
+    end: CGPoint(x: 683, y: 730)
+)
 
 // A compact destination strip without text.
 let routeBar = roundedRect(CGRect(x: 427, y: 715, width: 170, height: 35), radius: 17)
@@ -148,6 +165,8 @@ for cx in [CGFloat(397), CGFloat(627)] {
     context.addPath(headlight)
     context.strokePath()
 }
+// Close the foreground-only scaling transform.
+context.restoreGState()
 
 guard let image = context.makeImage() else {
     fatalError("Failed to rasterize icon")
