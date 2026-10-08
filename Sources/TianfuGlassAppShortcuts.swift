@@ -2,12 +2,14 @@ import AppIntents
 import Foundation
 import SwiftUI
 
-/// App Shortcuts directly return a static view. v0.8.0's nested SnippetIntent
-/// showed only Done when launched by the built-in Shortcuts entrypoint on iOS 27.
-/// Keep the old nested V3 intent for existing user-created shortcuts.
-struct FetchFreshTransitCodeIntent: AppIntent {
+/// The QR-producing App Shortcut must itself be a SnippetIntent.
+/// On iOS 27, the direct-view AppIntent path showed only Done, while
+/// PreviewTransitCodeIntent (SnippetIntent) displayed the complete QR view
+/// in the user's v0.8.2 on-device tests. Preserve the request/QR pipeline.
+struct FetchFreshTransitCodeIntent: SnippetIntent {
     static let title: LocalizedStringResource = "获取天府通乘车码"
     static let description = IntentDescription("由天府通 Glass 自动联网取码，直接显示系统悬浮乘车二维码。")
+    static let isDiscoverable = true
     static var supportedModes: IntentModes { .background }
 
     @MainActor
