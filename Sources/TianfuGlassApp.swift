@@ -3,43 +3,137 @@ import AppIntents
 import CoreImage
 import CoreImage.CIFilterBuiltins
 
+private let diagnosticPayload = "TIANFU-GLASS-V3-TEST-ONLY-NOT-VALID-FOR-TRAVEL"
+
 @main
 struct TianfuGlassApp: App {
     var body: some Scene {
         WindowGroup {
-            NavigationStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        Label("天府通 · Glass v0.3.1", systemImage: "tram.fill")
-                            .font(.title2.bold())
+            TianfuGlassHomeView()
+        }
+    }
+}
 
-                        Text("此页面只显示离线演示二维码，不需要网络或账号。")
-                            .font(.subheadline)
+private enum DiagnosticSheet: String, Identifiable {
+    case text, qr
+    var id: String { rawValue }
+}
+
+private struct TianfuGlassHomeView: View {
+    @State private var activeSheet: DiagnosticSheet?
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Label("天府通 · Glass v0.4.0", systemImage: "tram.fill")
+                        .font(.title2.bold())
+
+                    Text("所有测试均离线运行，不需要 Cookie、网络或真实乘车码。")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("第一组 · App 原生弹窗", systemImage: "rectangle.on.rectangle")
+                            .font(.headline)
+                        Text("检验 SwiftUI 渲染。这里是 App 自己展示的 sheet，不代表系统 Snippet 能正常工作。")
+                            .font(.caption)
                             .foregroundStyle(.secondary)
 
-                        TransitCodeSnippetView(
-                            payload: "TIANFU-GLASS-V3-TEST-ONLY-NOT-VALID-FOR-TRAVEL",
-                            lifetime: 60,
-                            demo: true
-                        )
-                        .frame(maxWidth: .infinity)
-                        .padding(10)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22))
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("快捷指令诊断步骤").font(.headline)
-                            Text("1. 新建空白快捷指令，单独运行「Glass 诊断 A · 纯文字」。")
-                            Text("2. 如果能看见文字，再运行「Glass 诊断 B · 测试二维码」。")
-                            Text("3. 两项都成功后，再把 result.code 传入「显示天府通乘车码 V3」。")
-                            Text("如果顶部只有 Done，请保留截图和 iOS 版本，不要先输入真实凭证。")
+                        Button {
+                            activeSheet = .text
+                        } label: {
+                            Label("测试 1 · 打开文字弹窗", systemImage: "text.bubble")
+                                .frame(maxWidth: .infinity)
                         }
-                        .font(.subheadline)
-                        .padding(16)
-                        .glassEffect(.regular, in: .rect(cornerRadius: 20))
+                        .buttonStyle(.glassProminent)
+
+                        Button {
+                            activeSheet = .qr
+                        } label: {
+                            Label("测试 2 · 打开二维码弹窗", systemImage: "qrcode")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.glass)
                     }
-                    .padding(20)
+                    .padding(16)
+                    .glassEffect(.regular, in: .rect(cornerRadius: 22))
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("第二组 · 运行 App Intent", systemImage: "bolt.horizontal.circle")
+                            .font(.headline)
+                        Text("尝试由系统呈现 Snippet。按钮运行 Intent，但系统是否展示结果由触发场景决定。")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Button(intent: GlassPlainTextDiagnosticIntent()) {
+                            Label("测试 3 · SnippetIntent 文字", systemImage: "text.alignleft")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.glass)
+
+                        Button(intent: GlassQRDiagnosticIntent()) {
+                            Label("测试 4 · SnippetIntent 二维码", systemImage: "qrcode.viewfinder")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.glass)
+
+                        Button(intent: GlassDirectViewDiagnosticIntent()) {
+                            Label("测试 5 · 直接返回视图", systemImage: "rectangle.stack")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.glass)
+                    }
+                    .padding(16)
+                    .glassEffect(.regular, in: .rect(cornerRadius: 22))
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("下一步：在「快捷指令」中运行 A 和 C").font(.headline)
+                        Text("• A：Glass 诊断 A · 纯文字（SnippetIntent 路径）")
+                        Text("• C：Glass 诊断 C · 直接返回文字（静态视图路径）")
+                        Text("如果 App 原生弹窗正常、A/C 仍只有 Done，则应继续调查系统调用环境，而不是二维码生成。")
+                    }
+                    .font(.subheadline)
+                    .padding(16)
+                    .glassEffect(.regular, in: .rect(cornerRadius: 22))
                 }
-                .background(Color(uiColor: .systemGroupedBackground))
+                .padding(20)
+            }
+            .background(Color(uiColor: .systemGroupedBackground))
+            .sheet(item: $activeSheet) { test in
+                NavigationStack {
+                    Group {
+                        switch test {
+                        case .text:
+                            VStack(spacing: 16) {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .font(.largeTitle)
+                                    .foregroundStyle(.green)
+                                Text("SwiftUI 文字弹窗测试成功")
+                                    .font(.headline)
+                                Text("这是 App 的 sheet，并不是 App Intents Snippet。")
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding(24)
+                        case .qr:
+                            TransitCodeSnippetView(payload: diagnosticPayload, lifetime: 60, demo: true)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .padding(12)
+                        }
+                    }
+                    .navigationTitle(test == .text ? "文字弹窗测试" : "二维码弹窗测试")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("关闭", systemImage: "xmark") { activeSheet = nil }
+                                .labelStyle(.iconOnly)
+                        }
+                    }
+                }
+                .presentationDetents([.height(test == .text ? 280 : 390)])
+                .presentationDragIndicator(.visible)
             }
         }
     }
