@@ -102,9 +102,13 @@ struct VectorTransitCodeSnippetView: View {
                 .frame(maxWidth: .infinity)
                 .accessibilityLabel(demo ? "不能用于乘车的演示二维码" : "天府通乘车二维码")
 
-            Text(demo ? "离线演示 · 不可乘车" : "有效期约 \(lifetime) 秒")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Label(
+                demo ? "离线演示 · 不可乘车" : "约 \(lifetime) 秒有效 · 重新运行以刷新",
+                systemImage: demo ? "checkmark.shield" : "clock"
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
         .padding(12)
         .frame(maxWidth: 320)
