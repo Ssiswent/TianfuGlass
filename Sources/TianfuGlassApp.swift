@@ -30,7 +30,7 @@ private struct TianfuGlassHomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Label("天府通 · Glass v0.8.5", systemImage: "tram.fill")
+                    Label("天府通 · Glass v0.8.6", systemImage: "tram.fill")
                         .font(.title2.bold())
 
                     Text("首次设置一次登录会话。之后通过 Spotlight、Siri 或自动注册的 App Shortcut 一键获取乘车码，通常不需要打开 App。")
@@ -38,6 +38,8 @@ private struct TianfuGlassHomeView: View {
                         .foregroundStyle(.secondary)
 
                     TransitCookieSettingsView()
+
+                    TransitRecoveryDiagnosticsView()
 
                     VStack(alignment: .leading, spacing: 10) {
                         Label("快捷指令接入", systemImage: "bolt.fill")
