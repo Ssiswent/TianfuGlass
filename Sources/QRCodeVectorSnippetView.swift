@@ -86,7 +86,6 @@ struct QRCodeModulesShape: Shape {
 /// view only defines their contents and never draws glass over QR modules.
 struct VectorTransitCodeSnippetView: View {
     let matrix: QRCodeMatrix
-    let lifetime: Int
     let demo: Bool
 
     var body: some View {
@@ -102,13 +101,12 @@ struct VectorTransitCodeSnippetView: View {
                 .frame(maxWidth: .infinity)
                 .accessibilityLabel(demo ? "不能用于乘车的演示二维码" : "天府通乘车二维码")
 
-            Label(
-                demo ? "离线演示 · 不可乘车" : "约 \(lifetime) 秒有效 · 重新运行以刷新",
-                systemImage: demo ? "checkmark.shield" : "clock"
-            )
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .center)
+            if demo {
+                Label("离线演示 · 不可乘车", systemImage: "checkmark.shield")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
         }
         .padding(12)
         .frame(maxWidth: 320)
