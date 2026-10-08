@@ -1,6 +1,6 @@
 # TianfuGlass · 天府通 Liquid Glass
 
-iOS 26+ SwiftUI + App Intents Snippet，当前测试版本 **v0.6.4（Build 13）**。
+iOS 26+ SwiftUI + App Intents Snippet，当前测试版本 **v0.6.5（Build 14）**。
 
 > **注意：本仓库目前是 Public。** 请勿提交真实 Cookie、TGT、Token、乘车码、含登录信息的快捷指令文件或截图。
 
@@ -31,6 +31,13 @@ iOS 26+ SwiftUI + App Intents Snippet，当前测试版本 **v0.6.4（Build 13�
 **新版操作仅有一个参数，不需要有效期。** 为避免破坏用户已经创建的快捷指令，旧版 **「显示天府通乘车码 V3」** 继续保留并接受旧的有效期参数，但输出界面也不会显示时间。要在快捷指令编辑界面去掉这个旧参数，删除旧 V3 操作并添加新版操作。
 
 二维码原文直接编码，不进行 Base64 解码、trim 或其他变换。空白内容或过长内容会被拒绝；二维码模块保持黑白及四模块 quiet zone，不在二维码上叠加玻璃材质。**新码必须重新运行快捷指令获取。**
+
+## v0.6.5 交通图标微调（待真机验收）
+
+- 顶部继续仅显示居中 SF Symbol `tram.fill`，不恢复文字标题。
+- 原生 Liquid Glass 圆形区域由 40pt 增至 **48pt**，图标由 18pt 增至 **20pt**，直接应用 `.glassEffect(.regular, in: .circle)`，不叠加人为描边、渐变或动画。
+- **不调整**二维码 228pt 绘制区、纯白底色、黑色模块、静区、App Intents 参数链或 iOS 原生 Snippet / Done 动画。
+- 由于系统可能合成嵌套玻璃材质，**不能仅以 Xcode 编译通过就保证图标底座在所有壁纸下明显可见**；在 iOS 27 真机截图中复核，若仍不明显则保持简洁图标而不无限增加装饰。
 
 ## v0.6.4 原生玻璃交通图标与二维码
 
