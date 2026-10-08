@@ -20,10 +20,12 @@ struct FetchFreshTransitCodeIntent: AppIntent {
     }
 }
 
-/// Offline demonstration uses the same direct-view path as the real shortcut.
-struct PreviewTransitCodeIntent: AppIntent {
+/// Offline demonstration is explicitly a SnippetIntent: the previously
+/// working user-created QR shortcut was hosted using a SnippetIntent.
+struct PreviewTransitCodeIntent: SnippetIntent {
     static let title: LocalizedStringResource = "演示天府通乘车码"
     static let description = IntentDescription("无需网络或 Cookie，验证原生悬浮二维码显示。")
+    static let isDiscoverable = true
     static var supportedModes: IntentModes { .background }
 
     @MainActor
@@ -34,6 +36,37 @@ struct PreviewTransitCodeIntent: AppIntent {
             throw TransitCodeError.qrGenerationFailed
         }
         return .result(view: VectorTransitCodeSnippetView(matrix: matrix, demo: true))
+    }
+}
+
+/// Deliberately minimal control: separates QR Shape serialization from
+/// the native glass icon and surrounding layout. Never carries a real code.
+struct PlainQRShapeDiagnosticIntent: SnippetIntent {
+    static let title: LocalizedStringResource = "诊断基础二维码"
+    static let description = IntentDescription("离线对照：只绘制二维码和简单文字，不包含 Liquid Glass。")
+    static let isDiscoverable = true
+    static var supportedModes: IntentModes { .background }
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ShowsSnippetView {
+        guard let matrix = QRCodeMatrix.encode(
+            "TIANFU-GLASS-PLAIN-QR-DIAGNOSTIC-NOT-VALID"
+        ) else {
+            throw TransitCodeError.qrGenerationFailed
+        }
+        return .result(
+            view: VStack(spacing: 8) {
+                Text("二维码渲染诊断")
+                    .font(.headline)
+                QRCodeModulesShape(matrix: matrix)
+                    .fill(.black)
+                    .frame(width: 228, height: 228)
+                    .background(.white, in: RoundedRectangle(cornerRadius: 10))
+                Text("离线演示 · 不能用于乘车")
+                    .font(.caption)
+            }
+            .padding(12)
+        )
     }
 }
 
@@ -55,6 +88,14 @@ struct TianfuGlassShortcutsProvider: AppShortcutsProvider {
             ],
             shortTitle: "演示乘车码",
             systemImageName: "qrcode"
+        )
+        AppShortcut(
+            intent: PlainQRShapeDiagnosticIntent(),
+            phrases: [
+                "用\(.applicationName)测试基础二维码"
+            ],
+            shortTitle: "诊断基础二维码",
+            systemImageName: "qrcode.viewfinder"
         )
         // Independent control: if both this and the QR view show only Done,
         // the host is dropping views rather than the QR renderer failing.
