@@ -1,142 +1,35 @@
 # TianfuGlass · 天府通 Glass
 
-当前候选版本：**v0.8.6（Build 25）**。
+**v0.9.0 (Build 26)** · iOS 26+ · SwiftUI / App Intents Snippet
 
-> 本仓库是公开仓库。禁止在源码、CI、README、日志、截图及 Issues 中上传真实 Cookie、TGT、Token 或动态乘车码。用户此前在对话中展示过会话凭证，建议通过官方渠道重新登录使旧凭证失效。
+TianfuGlass 现在是一个**纯二维码展示工具**：由 iPhone「快捷指令」把二维码的原始文本传给 App，App 只生成并显示原生 Snippet 浮层。**不主动发起 API 请求、不登录、不读取 Cookie、不存储乘车码、不提供演示或诊断操作。**
 
-## v0.8.6 · 恢复验证：全新 App Shortcut 标识与本机执行状态
+## 使用方法
 
-- **观察到的真机故障**：v0.8.5 中「演示天府通乘车码」与「获取天府通乘车码」均未显示二维码；但 GitHub 对比确认 v0.8.5 的 QR、Snippet、API、Keychain 与 v0.8.3 相同，仅版本信息不同。因此不再无依据地修改二维码或尝试加载动画。
-- **新增三个全新类型标识**：`RecoveryTextSnippetIntent`（「恢复验证 · 文字」）、`RecoveryDemoSnippetIntent`（「恢复验证 · 演示二维码」）、`RecoveryLiveSnippetIntent`（「恢复验证 · 获取乘车码」）。使用与先前成功的入口相同的 `SnippetIntent` 和 `VectorTransitCodeSnippetView`，独立检测系统旧快捷指令元数据/宿主问题。原有四项快捷操作完整保留。
-- **本机安全诊断面板**：打开 App 后，在「系统快捷操作 · 执行诊断」中点击「刷新执行状态」，可看到三项恢复入口上一次运行阶段：启动、API 请求成功、二维码编码成功、视图已返回或请求失败。仅本机记录固定状态和时间，不保存 Cookie、Token、原始响应、动态乘车码或用户 ID。
-- **先测无需凭证的「恢复验证 · 文字」与「恢复验证 · 演示二维码」**。若 Demo 显示正常，再明确运行新「恢复验证 · 获取乘车码」验证 API。**请勿在聊天中发送真实乘车码、Cookie 或会话令牌。**
-- 若显示只有 Done，返回 App 点击刷新，反馈相应「最后状态」。如写着「已向系统返回视图」但屏幕无内容，说明源码执行已到返回位置、而系统展示仍失败；尚不能归咎于某种具体缓存机制。
-- 对原版「获取天府通乘车码」与「演示天府通乘车码」没有修改；无动态 loading/异步 reload，也不改 API、Keychain、二维码绘制和系统 Done。**仅有 CI PASS 不表示 iOS 27 真机恢复已通过。**
-- **注意**：安装恢复验证版请尽量覆盖安装、勿先卸载，以降低会话丢失风险。若新入口与旧入口都失败，应对照同一设备同一签名环境中的原始 v0.8.3 IPA，或进一步取得隐私安全的系统运行日志。
+1. 在你自己的 iPhone 快捷指令中调用所需接口，取得二维码原始字符串，例如接口返回的 `result.code`。
+2. 添加 TianfuGlass 的 **「显示天府通乘车码」** 操作；唯一参数 **「乘车码内容」** 指向上一步的原始字符串，勿转换成字典摘要或裁剪内容。
+3. 运行快捷指令，由 iOS 显示悬浮乘车二维码。无需先打开 TianfuGlass App。
 
-## v0.8.5 · 正式取码回归恢复（无异步加载实验）
+旧版 **「显示天府通乘车码 V3」** 仍保留，以兼容已经使用「有效期（秒）」参数的旧快捷指令。有效期只用于旧参数有效性检查，不会显示在 Snippet，也不会驱动网络请求。
 
-- **已确认的真机回归：** v0.8.4 两个新加载诊断不显示二维码，且「获取天府通乘车码」正式入口也不再显示二维码。这是一次正式取码回归，优先恢复功能，不再尝试异步 UI 实验。
-- **恢复基线：** `Sources/TianfuGlassAppShortcuts.swift` 已完整恢复为 v0.8.3（Build 22、commit `b43d6ecbf572abf05061a2393e9e11729055f588`）的源码，去掉新增「诊断原位加载」和「诊断重载加载」注册入口；整个 `Sources/TransitLoadingSnippetDiagnostics.swift` 失败实验文件已删除。
-- **未改动的文件：** `TransitCodeAPIClient.swift`、`TransitCookieStore.swift`、`QRCodeVectorSnippetView.swift`，与已显示正式乘车码的 v0.8.3 完全一致。此前已通过的「演示天府通乘车码」、「诊断基础二维码」、「诊断文字弹窗」依旧保留。
-- **验证门槛：** GitHub Actions 的 Xcode 27 构建、IPA 打包、Release 发布先通过；然后在 iOS 27 真机只测试「演示天府通乘车码」和「获取天府通乘车码」。若正式取码仍异常，记录无敏感信息的错误提示与现象，不要把 Cookie 或真实码上传仓库。
-- 本次不是对 Snippet 系统根因的确定诊断。不能断言「新增操作」必然导致故障；这是把功能退回已经观察到可用的源码状态，用独立 Build 24 验证恢复。
-- **保留 v0.8.3 的取码后等待期间高度跳动**，不声称已修复。直到稳定取码重新通过，停止迭代动态 loading/reload 效果。
+注意：**本 App 接收的是二维码原始文本，不是二维码 PNG/JPEG 图片文件**。收到文本后在设备上生成黑白 QR 图案；保持原生 228pt 二维码、四模块 quiet zone、纯白底以及 iOS 系统管理的 Done 按钮和 Liquid Glass 效果。系统控制弹层初始高度、位置和展开动画，App 无法保证不发生高度变化。
 
-## v0.8.4 · 固定高度加载实验（失败，已撤回）（不修改真实取码）
+## 范围与隐私
 
-- iOS 27 真机反馈：v0.8.3 的正式 API 乘车码能够显示，但因为 `FetchFreshTransitCodeIntent.perform()` 先等待网络完成再返回视图，系统提前显示只有 Done 的矮弹层，之后才突然扩展成二维码卡片。
-- Apple 的 `SnippetIntent` 建议尽快返回视图、避免长时间阻塞 `perform()`；公开的 `SnippetIntent.reload()` 可在底层数据变化时更新已显示 Snippet。但宿主弹层的最初呈现与尺寸动画属于 iOS 控制范围。
-- **为避免破坏已经能正常乘车的正式取码，v0.8.4 仅新增两项离线实验入口**，均先渲染与最终结果同尺寸的白色 228pt 卡片与原生加载指示，约 2 秒后替换为演示二维码；不涉及真实 Cookie、API 或闸机。
-- 「**诊断原位加载**」：直接由 `SnippetIntent` 返回 SwiftUI `@State + .task` 视图。观察主机是否支持在 Snippet 生命周期内原位改变视图，不调用 `reload()`。
-- 「**诊断重载加载**」：通过一个无参数 AppIntent 创建唯一测试请求标识，返回加载中的 SnippetIntent；2 秒后调用 `SnippetIntent.reload()` 刷新。测试这个官方刷新机制是否能保持弹层高度，**以及是否会短暂出现只有 Done 的宿主壳**。
-- 测试时两项都等待二维码出现后再点击 Done。**不要在「诊断重载加载」的 2 秒等待期间提前关闭**：Apple 文档说明 `reload()` 在 Snippet 未显示时也可能重新唤出弹层，这个实验尚未建立可靠的关闭状态感知。
-- **真机通过后再决定真实 API 使用哪一种方案**。不能仅以 Xcode 构建成功就宣称解决闪跳。
-- 正式「获取天府通乘车码」`SnippetIntent`、Keychain、API、已通过闸机识别的二维码绘制、Glass、Done 和系统动画全部保持 v0.8.3 不变。
+- 没有乘车码 API 客户端，也不使用 `URLSession` 网络取码。
+- 没有 Cookie/TGT 设置页面、会话读取流程或 Keychain 凭证管理功能。
+- 不在磁盘、本地日志或用户默认设置中保存输入的二维码原始文本。
+- 不包含任何演示、调试、恢复或诊断用 App Intent/SwiftUI 界面。
+- 保留原有正式「显示天府通乘车码」与 V3 的动作标识，尽量避免破坏既有快捷指令。
+- 从旧版本覆盖安装后，**旧版本曾写入系统 Keychain 的凭证可能仍保留在设备中**。新版本不会读取、使用或发送这些旧条目；删除相关源码本身不等于清除系统 Keychain 历史数据。
+- 本仓库是 **Public**；绝对不要提交真实 Cookie、Token 或有效的动态乘车码。
 
-## v0.8.3 · 正式取码统一到已验证的 SnippetIntent 入口
+## 构建
 
-- **v0.8.2 真机结果：**「演示天府通乘车码」PASS（完整二维码）；「诊断基础二维码」PASS（文字、二维码）；v0.8.1「诊断文字弹窗」PASS。由此确认自动注册的 App Shortcut 可以在 iOS 27 中展示二维码 Snippet，且现有 `QRCodeMatrix`、矢量 `Shape` 与正式演示卡片无需修改。
-- v0.8.1 的正式入口 `FetchFreshTransitCodeIntent` 仍然是直接返回视图的普通 `AppIntent`。本版只将它更改为 `SnippetIntent` 并设置 `isDiscoverable = true`，与 v0.8.2 已通过的 `PreviewTransitCodeIntent` 使用相同宿主类型。
-- **正式 API 请求、Keychain Cookie、超时/重定向防护、JSON 解析、二维码生成与 Liquid Glass/Done 系统表现全部保持原样**。不删除旧版快捷指令兼容入口。
-- **剩余验收：** 安装 v0.8.3，在已保存有效 Cookie 的设备上运行「获取天府通乘车码」，检查是否能联网取到新码并正确悬浮显示（不能仅以 Xcode 编译通过宣称真实 API 和扫码已经验证）。若失败，仅报告不含 Cookie/真实二维码的错误文案与页面现象；不要上传敏感凭证或暴露真码。
-- v0.8.2 的结果支持上述**单点修复方向**，但尚不能证明后台网络请求及登录态一定可用。无须重复已通过的文字、演示、基础 QR 测试，先验证正式入口。
+[GitHub Actions](https://github.com/Ssiswent/TianfuGlass/actions/workflows/build-unsigned-ipa.yml) 使用 Xcode 27 编译，并自动在 [GitHub Releases](https://github.com/Ssiswent/TianfuGlass/releases) 发布未签名 IPA 与 SHA-256。普通 iPhone 安装前需要签名。
 
-## v0.8.2 · 针对「文字 PASS / 二维码 Done-only」的隔离诊断
+以前的成功扫码反馈只针对既有二维码编码与 Snippet 路径；本次代码清理需要在真机运行现有快捷指令重新确认。
 
-- iOS 27 真机结果：**v0.8.1「诊断文字弹窗」PASS**，但 **「演示天府通乘车码」FAIL（只有系统 Done）**。这表明宿主至少能正确呈现文字 Snippet，不能再把问题笼统归咎为未注册 App Shortcut。
-- 只改**离线演示**，使 `PreviewTransitCodeIntent` 显式遵守 `SnippetIntent`，在其 `perform()` 内返回沿用的 `VectorTransitCodeSnippetView`。这是测试是否需要 SnippetIntent 的原生呈现环境，**不是已确认的根因或通过验收的修复**。
-- 新增自动注册操作 **「诊断基础二维码」**：返回简单标题、`QRCodeModulesShape` 和演示提示，不包含图标、Glass 或完整布局。与正常演示作对照，判断是基本 QR Shape 还是复杂视图导致显示失败。
-- **运行顺序：先「演示天府通乘车码」，如果仍 Done-only，再「诊断基础二维码」。** 文字已 PASS，无需重复测。注意新诊断只使用虚构数据。
-- **正式「获取天府通乘车码」API Intent、会话 Keychain、已被闸机验证的原有 QR 画法完全不改**。真实接口入口目前还没有经过真机呈现验收，不要以这次离线试验推断真实码功能正常。
-- 不干预系统弹层与动画，不要求禁用系统动态效果。待对照结果明确后再选择最小的正式入口修复。
+## 历史兼容原则
 
-## v0.8.1 · App Shortcuts 空白 Snippet 修复候选
-
-- iOS 27 真机反馈：v0.8.0 自动注册的「演示天府通乘车码」在快捷指令 App 执行时仅出现系统 Done 按钮，二维码内容缺失；**不能认定新 App Shortcuts 已经成功显示**。
-- 修复实验：自动注册的「演示天府通乘车码」和「获取天府通乘车码」改为由 App Intent 的 `perform()` 直接返回 `ShowsSnippetView`，不再通过第二层 `TransitCodePresentationSnippetIntent` 转发。复用原有 `QRCodeMatrix` 和 `VectorTransitCodeSnippetView`，未更改二维码绘制、Cookie 和网络行为。
-- 同时自动注册「诊断文字弹窗」作为对照，直接调用历史已通过的 `GlassDirectViewDiagnosticIntent`。验收先运行文字诊断，再运行演示二维码，最后才运行真实 API 取码。
-- **该版本属于有边界的诊断候选**。不能以 Xcode 编译成功代替真实 iOS 27 Snippet 展示；仍需真机验证。此前成功的「显示天府通乘车码」/V3 兼容入口不修改。
-- 保留由系统管理的 Liquid Glass、Done、弹层位置和入场动画；不关闭设备动态效果。
-
-## v0.8.0 · 由 App 自动取码并悬浮展示
-
-- 新增无参数「获取天府通乘车码」App Shortcut，通过后台 URLSession POST 请求固定的 HTTPS 天府通 API，并把有效 result.code 原文交给现有 SnippetIntent。
-- 新增「演示天府通乘车码」App Shortcut，无需网络或 Cookie，便于验证系统自动发现的入口。
-- App 内新增「登录会话」设置：用户**首次自行粘贴 Cookie 字符串**（包含 TGT，不含 cookie: 前缀）。使用设备 Keychain 的 WhenUnlockedThisDeviceOnly 方式保存、覆盖、清除。不会保存到 UserDefaults、App Shortcut 参数或项目文件。
-- 不直接嵌入用户提供过的真实 Cookie。API 客户端禁用缓存和 cookie jar、设置 12 秒超时，验证 HTTP 状态、返回结构、绑定状态及二维码原文，不保存实时二维码，也不在错误提示中回显响应/凭证。
-- 继续保留旧的「显示天府通乘车码」和 V3 操作，复用已在地铁闸机成功识别的黑白矢量二维码、纯白静区、系统 Done 与 Liquid Glass。
-
-### 建议验收顺序
-
-1. 安装候选 IPA，首次打开 App，在「登录会话」中保存自己当前有效 Cookie。
-2. 在 Spotlight、Siri 或「快捷指令」App 的 TianfuGlass 操作列表找到「演示天府通乘车码」，验证是否不打开主界面就能悬浮显示演示二维码。
-3. 再运行「获取天府通乘车码」，检查是否能自动请求新的 result.code 并展示。每次执行请求新码，不使用旧码缓存。
-4. 验证会话失效、网络失败和服务端无效响应都有明确错误；最后在地铁闸机验收真实取码链路。
-
-**不能只凭 Xcode 构建就认定 iOS 27 的自动发现和后台 Snippet 已真机通过**。是否能在 Spotlight、Siri 或其他触发入口显示，由系统运行环境决定。自定义 ControlWidget 仍不能直接展示 Snippet。当前不支持自动续期、后台扫码成功回调或自动关闭系统 Snippet。
-
----
-## 历史版本
-
-iOS 26+ / iOS 27 SwiftUI + App Intents Snippet，用于在 iPhone「快捷指令」中直接展示天府通乘车二维码，不打开 App 主界面。
-
-当前测试版本 **v0.7.2 (Build 18)**。**仓库为 Public**：禁止提交真实 Cookie、TGT、Token、动态二维码内容或包含账号信息的快捷指令。
-
-## 使用
-
-1. 原来的「天府通」快捷指令继续自行请求接口，并从响应字典中提取 `result.code`（不要误取外层响应状态 `code`）。
-2. 添加 **「显示天府通乘车码」** 操作；唯一参数「乘车码内容」选择 `result.code` 原始字符串。新操作不需要有效期。
-3. 保留该操作的系统「运行时显示」选项，从快捷指令列表或其他支持 Snippet 的入口执行。
-4. 每次需要新乘车码时重新运行快捷指令。
-
-保留兼容入口「显示天府通乘车码 V3」，但其有效期输入现在不显示在乘车码界面上。代码不会把原始二维码字符串解码、裁剪或写入持久化存储。
-
-## v0.7.2 · 大图标与柔和浮雕
-
-- 延续 v0.7.1 的蓝青渐变**满幅背景**，仍然没有内部白色圆底、额外玻璃圆片或文字。
-- 以图标画布中心为锚点，仅将地铁车头、车窗、车灯和轨道整体**放大 20%**；背景尺寸不变，列车主体更饱满、更适合灵动岛的小尺寸显示。
-- 参考更简洁的现代 iOS App Icon：保留轻微车身冷白渐变、柔和阴影和细薄高光边缘，避免增加复杂纹理或额外图层。
-- 只修改 `scripts/generate_app_icon.swift` 的绘制，保持原有 1024px PNG 输出、`AppIcon` 资源目录、CI 自动构建与校验工作流。构建后 GitHub Release 同时提供真实 PNG 预览。
-- **不修改** SwiftUI Snippet、QRCodeMatrix、矢量二维码、白色静区、快捷指令参数或系统 Liquid Glass / 灵动岛动画。v0.7.2 真机图标观感待确认。
-
-## v0.7.1 · 简化图标及立体列车
-
-- 完全移除原图标中间额外的半透明椭圆/白色玻璃圆底；保留全幅蓝青渐变背景，主视觉只剩居中的白色地铁车头。
-- 给地铁车身增加轻微明暗渐变与投影，并在窗户上增加很轻的玻璃高光，保持灵动岛小尺寸下可辨认，禁止过度纹理、额外图标边框或文字。
-- `scripts/generate_app_icon.swift` 是图标的唯一来源。GitHub Actions 每次构建直接运行生成脚本；本地 Xcode 构建在 PNG 不存在或脚本比 PNG 新时重新生成，避免缓存旧图标。
-- CI 检查 `CFBundleIcons` 中的 `AppIcon`，Release 附带 PNG 预览与未签名 IPA。**本版本图标尚未经过用户真机视觉验收。**
-- App Intents Snippet、原生 Done / 灵动岛执行状态、二维码白底和扫码数据逻辑保持不变。
-
-## v0.7.0 · 正式 App 图标
-
-- 不再使用自动生成的空白占位图标。新增原创的**蓝青渐变背景与简化白色正面列车**作为 App Icon；没有文字，缩小至灵动岛尺寸仍有可辨识轮廓。
-- `scripts/generate_app_icon.swift` 用 Swift / CoreGraphics 绘制 1024×1024 PNG；`Sources/Assets.xcassets/AppIcon.appiconset/Contents.json` 将其声明为 `AppIcon`；Xcode 构建设置选择此图标，并由系统进行图标裁剪和显示。
-- 这是**Liquid Glass 风格的单张高分辨率应用图标**，不是由 Icon Composer 生成的多层 .icon 文件。iOS 会按照当前系统外观显示标准应用图标，但完整多层折射和材质响应需另行制作 Icon Composer 原生分层文件。
-- GitHub Actions 会自动生成图标、确认最终 IPA 的 `CFBundleIcons` 包含 `AppIcon`，并额外在 Releases 附上一张 1024px 图标预览。
-- **灵动岛的快捷指令执行提示无法由此关闭**，这次只替换默认占位图标，不改变系统运行指示、Snippet、二维码或原生动画。
-- 实际在灵动岛、主屏幕和深色/着色模式的观感，需要 v0.7.0 真机验收。
-
-## UI 设计与 iOS 27 限制
-
-- 卡片顶部仅保留居中的 `tram.fill` SF Symbol，不显示文字标题。
-- 图标采用**已在 v0.6.4 真机成功显示**的结构：`Image` 本身不加 `.glassEffect`，由独立的圆形背景使用 `.glassEffect(.regular, in: .circle)`。v0.6.5 将 `.glassEffect` 直接应用到图标导致整个图标在实际 Snippet 消失，因此 v0.6.6 恢复经过验证的 40pt / 18pt 图标布局。玻璃圆形底座在不同背景下可能非常淡；保证图标可见优先于强调独立玻璃效果。
-- 二维码绘制仍使用 `QRCodeMatrix` 与 `QRCodeModulesShape`，保持 228pt 黑白模块区、纯白背景与四模块 quiet zone。不能把二维码置于半透明玻璃上。
-- 正式乘车码不显示有效期、不增加额外确认或刷新按钮。原生 Done 按钮由 iOS 提供。
-- **不干预 Snippet 弹出位置、Liquid Glass 系统动画、完成按钮**。
-- 运行快捷指令时灵动岛出现临时 App 图标和完成勾号是 iOS 的运行状态提示，并非此 App 自行创建的 Live Activity。App Intents 没有提供可在保留 Snippet 的同时关闭此系统提示的公开 API。不要通过关闭「运行时显示」、修改设备动态效果或添加不可靠的隐藏技巧尝试规避。
-
-## 验证状态
-
-已由用户真机确认：
-
-- A / C 纯文字 Snippet、D 参数化文字 Snippet：通过。
-- B 矢量二维码 Snippet：通过。
-- v0.6.4 顶部 `tram.fill` 图标：可见，玻璃圆形底座不明显。
-- v0.6.5 顶部图标：**消失（失败）**；二维码、Done 正常。
-
-v0.6.6 撤回导致图标消失的单独改动，**需要真机确认显示恢复**。同时，真实闸机读取乘车码还没有通过正式验收；CI 成功不代表闸机一定兼容。
-
-## 构建及下载
-
-主分支中的 `Sources/**`、`project.yml` 或工作流变更自动触发 [GitHub Actions](https://github.com/Ssiswent/TianfuGlass/actions/workflows/build-unsigned-ipa.yml)，使用 Xcode 27 编译，发布包含未签名 IPA 及 SHA-256 的独立 [GitHub Pre-release](https://github.com/Ssiswent/TianfuGlass/releases)。未签名 IPA 在普通 iPhone 安装前需要自行签名。
+保留单参数入口 `ShowTransitCodeSimpleIntent`、旧版 `ShowTransitCodeIntent`、内部 `TransitCodePresentationSnippetIntent` 与 `QRCodeMatrix` / `QRCodeModulesShape`。从快捷指令取得的内容在进入 QR 编码时保持原文不变。
