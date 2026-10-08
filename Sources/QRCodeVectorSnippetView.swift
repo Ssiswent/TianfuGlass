@@ -90,9 +90,21 @@ struct VectorTransitCodeSnippetView: View {
 
     var body: some View {
         VStack(spacing: 9) {
-            Label(demo ? "天府通 · 测试二维码" : "天府通乘车码", systemImage: "tram.fill")
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 10) {
+                Image(systemName: "tram.fill")
+                    .font(.system(size: 15, weight: .semibold))
+                    .frame(width: 32, height: 32)
+                    .glassEffect(.regular, in: .circle)
+                    .accessibilityHidden(true)
+
+                Text(demo ? "天府通 · 测试二维码" : "天府通乘车码")
+                    .font(.headline)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             QRCodeModulesShape(matrix: matrix)
                 .fill(Color.black)
