@@ -107,6 +107,13 @@ struct VectorTransitCodeSnippetView: View {
                 .foregroundStyle(.secondary)
         }
         .padding(12)
-        .frame(maxWidth: 320)
+        // The snippet uses a stable content width to minimize layout movement
+        // while the system hosts it. This cannot override iOS presentation.
+        .frame(width: 292, alignment: .center)
+        .contentTransition(.identity)
+        .transaction { transaction in
+            transaction.animation = nil
+            transaction.disablesAnimations = true
+        }
     }
 }
