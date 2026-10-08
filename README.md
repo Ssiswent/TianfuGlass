@@ -1,42 +1,47 @@
 # TianfuGlass · 天府通 Liquid Glass
 
-轻量 iOS 26+ SwiftUI / App Intents 工程。当前诊断版本 **v0.4.0 (5)**。
+iOS 26+ SwiftUI / App Intents 工程。当前诊断版本 **v0.5.0 (6)**。
 
-## 问题与范围
+## 诊断结论
 
-设备通过快捷指令触发 App Intent 后，只看见系统顶部 `Done`，未看到自定义 Snippet。本版本重点是把 SwiftUI 图片渲染与 App Intent 的系统呈现机制分开测试，**并未宣称修复了 Done-only 问题**。
+由用户 iOS 27 真机确认：
 
-没有包含真实天府通 Cookie、Token、二维码或联网接口。二维码仅使用明确标记为测试的固定数据。
+- App 内 SwiftUI 文字 Sheet、二维码 Sheet：**PASS**。
+- 从快捷指令列表运行「Glass 诊断 A · 纯文字」和「Glass 诊断 C · 直接返回文字」：**PASS**。
+- 旧版「Glass 诊断 B · 测试二维码」：只出现系统顶部 Done，**FAIL**。
 
-## 请在 iPhone 上按顺序测试
+所以优先排查 **参数化 SnippetIntent 与二维码视图渲染**。不能把 Done-only 归因于接口、Cookie 或二维码生成失败（后两者在 App Sheet 中已可用）。Apple 官方说明，Snippet 由系统呈现，且 `SnippetIntent` 可能多次执行；应快速返回轻量内容，参数传递应保持最小且不可变。
 
-安装新版、打开「天府通 Glass」，主页有五个按钮：
+## v0.5.0 改动
 
-1. **测试 1 · 打开文字弹窗**：App 自身的 SwiftUI `.sheet`，应看见“SwiftUI 文字弹窗测试成功”和关闭按钮。
-2. **测试 2 · 打开二维码弹窗**：App 自身的 `.sheet`，显示离线测试二维码和关闭按钮。
-3. **测试 3 · SnippetIntent 文字**：在 App 中运行之前的 A 诊断 Intent。由系统决定是否呈现。
-4. **测试 4 · SnippetIntent 二维码**：在 App 中运行之前的 B 诊断 Intent。
-5. **测试 5 · 直接返回视图**：在 App 中运行新增的 C Intent（不再经由独立 SnippetIntent）。
+1. **B 的二维码不再使用 `Image(decorative: CGImage)`**，新建 QR 位图矩阵（在 SnippetIntent `perform()` 中生成），通过纯 SwiftUI `Shape` 的 Path 绘制黑色模块，保留 4 个模块的白色 quiet zone。无需在 `View.body` 中运行 `CIContext`。
+2. 原「显示天府通乘车码 V3」也复用新的矢量二维码视图，但仍需真机验证。
+3. 增加 **「Glass 诊断 D · 参数化文字」**：和 B 一样通过 `SnippetIntent` 传递一个 `@Parameter String`，视图只含文字。
 
-然后从「快捷指令」列表运行两个**各自只有一个动作**的新快捷指令：
-- `Glass 诊断 A · 纯文字`：旧的 SnippetIntent 路径。
-- `Glass 诊断 C · 直接返回文字`：新增的静态视图返回路径。
+## 下一轮只需要运行 D 和 B
 
-如果测试 1/2 成功，而 A/C 在快捷指令中都仍只出现 Done，问题范围会收敛到系统对 Snippet 的呈现或 App Intents 调用环境，**不是 QRCodeRenderer / API / Cookie 的问题**。如果 A 失败但 C 成功，优先审查 SnippetIntent 链式返回与参数生命周期。单独从 App 内的 Button(intent:) 触发，不保证系统展示 Snippet，需与快捷指令的测试结果一起判断。
+安装新版本后，从「快捷指令」App 的**快捷指令列表**运行两个只有一个动作的新快捷指令，分别为：
 
-**若从控制中心“控件 Control”调用 App Intent，Apple 官方明确说明该调用不支持显示 snippets。** 请从「快捷指令」App 列表运行诊断。
+- **D · 参数化文字**：预期显示标题及固定字符串 `GLASS-PARAMETER-TRANSFER-OK`。
+- **B · 测试二维码**：预期在系统顶部 Snippet 显示黑白二维码与「离线演示 · 不可乘车」。
 
-## 获取 IPA
+按结果判断：
 
-打开 [Actions → Build unsigned IPA (Xcode 27)](https://github.com/Ssiswent/TianfuGlass/actions/workflows/build-unsigned-ipa.yml)，在成功的运行中下载 `TianfuGlass-v0.4.0-unsigned-IPA`，解压得到 `TianfuGlass-v0.4.0-unsigned.ipa`。
+| D | B | 代表什么 |
+|---|---|---|
+| PASS | PASS | 参数链和矢量二维码可以显示；下一步测试真实 code |
+| PASS | 仅 Done | 参数链可用，重点检查二维码的 SwiftUI Shape、尺寸、绘制或系统限制 |
+| 仅 Done | 仅 Done | 优先检查参数化 SnippetIntent 的恢复/传参，而非二维码 |
+| 仅 Done | PASS | 两个 SnippetIntent 结构存在其他差异，需要重新审查 |
 
-未签名 IPA 在普通 iPhone 上安装前需要合法的签名流程。测试版不用账号凭证。
+不要从 App 内的 `Button(intent:)` 结果推断快捷指令 Snippet 行为。控制中心 Control 调用也不支持展示 Snippet。
 
-## 技术结构
+## 构建
 
-- `Sources/TianfuGlassApp.swift`: SwiftUI 主界面、两种 App 内 sheet 诊断、三个 Intent 按钮、共享二维码视图。
-- `Sources/ShowTransitCodeIntent.swift`: 原 A/B、V3 意图，以及新增直接静态视图的 C 诊断。
-- `project.yml`: XcodeGen 生成 iOS 项目。
-- `.github/workflows/build-unsigned-ipa.yml`: GitHub Actions Xcode 27 Release 编译、未签名 IPA 打包与上传。
+[GitHub Actions · Build unsigned IPA (Xcode 27)](https://github.com/Ssiswent/TianfuGlass/actions/workflows/build-unsigned-ipa.yml)
 
-系统决定 Snippet 弹出位置、大小和 Done 按钮，不能由 SwiftUI 修改为自由居中的模态弹窗。
+Artifacts: `TianfuGlass-v0.5.0-unsigned-IPA`。未签名 IPA 需要自行签名后才能在普通 iPhone 上安装。
+
+项目没有上传真实 Cookie、Token、乘车码或天府通 API，测试二维码不可用于乘车。
+
+源码：`Sources/TianfuGlassApp.swift`、`Sources/QRCodeVectorSnippetView.swift`、`Sources/ShowTransitCodeIntent.swift`。
