@@ -7,6 +7,10 @@ private let diagnosticPayload = "TIANFU-GLASS-V3-TEST-ONLY-NOT-VALID-FOR-TRAVEL"
 
 @main
 struct TianfuGlassApp: App {
+    init() {
+        TianfuGlassShortcutsProvider.updateAppShortcutParameters()
+    }
+
     var body: some Scene {
         WindowGroup {
             TianfuGlassHomeView()
@@ -26,20 +30,22 @@ private struct TianfuGlassHomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Label("天府通 · Glass v0.7.2", systemImage: "tram.fill")
+                    Label("天府通 · Glass v0.8.0", systemImage: "tram.fill")
                         .font(.title2.bold())
 
-                    Text("运行快捷指令即可显示乘车码，无需先打开此 App。真实 Cookie 和接口请求仍留在你自己的快捷指令中。")
+                    Text("首次设置一次登录会话。之后通过 Spotlight、Siri 或自动注册的 App Shortcut 一键获取乘车码，通常不需要打开 App。")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+
+                    TransitCookieSettingsView()
 
                     VStack(alignment: .leading, spacing: 10) {
                         Label("快捷指令接入", systemImage: "bolt.fill")
                             .font(.headline)
-                        Text("① 请求接口并取得 result.code。")
-                        Text("② 添加新版「显示天府通乘车码」，将唯一的「乘车码内容」设为 code。")
-                        Text("③ 每次需要新乘车码，重新运行快捷指令即可。旧版 V3 仍然兼容已有快捷指令。")
-                        Text("提示：Snippet 的出现位置、Done 按钮和系统动画由 iOS 控制。")
+                        Text("① 首次在上方保存官方登录会话 Cookie。")
+                        Text("② 在 Spotlight、Siri 或「快捷指令」中搜索「获取天府通乘车码」，直接运行即可。")
+                        Text("③ 可先试「演示天府通乘车码」验证悬浮弹窗，不会联网。")
+                        Text("旧的多步骤快捷指令及 V3 仍然保留兼容。系统控制 Snippet 位置、Done 按钮与动画。")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -104,8 +110,8 @@ private struct TianfuGlassHomeView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("诊断说明").font(.headline)
                         Text("A、C、D 和 B 已分别通过快捷指令真机测试。")
-                        Text("推荐使用「显示天府通乘车码」（仅需 code），首次请用无敏感信息的测试字符串验证。")
-                        Text("不要公开分享包含 Cookie、会话令牌或真实乘车码的快捷指令。")
+                        Text("新增 App Shortcut 自动获取乘车码：App 直接请求 API，不再需要手工配置「获取 URL 内容」和字典解析。")
+                        Text("请勿公开发布 Cookie 或真实乘车码；网络请求失败、会话失效不会展示旧码。")
                     }
                     .font(.subheadline)
                     .padding(16)
