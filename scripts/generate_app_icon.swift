@@ -132,7 +132,7 @@ gradientFill(
 )
 
 // Simple headlamps with a slight highlight, no extra backing shape.
-for cx in [397.0, 627.0] {
+for cx in [CGFloat(397), CGFloat(627)] {
     let headlight = CGPath(
         ellipseIn: CGRect(x: cx - 34, y: 351, width: 68, height: 68),
         transform: nil
