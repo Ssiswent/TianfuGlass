@@ -114,7 +114,7 @@ jobs:
             echo "- Commit: ${GITHUB_SHA}"
             echo "- Build: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo "- Requires signing before installation on a standard iPhone."
-            echo "- Diagnostic build: on-device App Intents Snippet behavior requires validation."
+            echo "- Display-only companion: accepts QR payload from Shortcuts; no built-in API client."
           } > "$RUNNER_TEMP/release-notes.md"
           gh release create "$TAG" "$IPA_NAME" "$IPA_NAME.sha256" \
             "Sources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png" \
