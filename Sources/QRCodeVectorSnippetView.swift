@@ -90,30 +90,19 @@ struct VectorTransitCodeSnippetView: View {
 
     var body: some View {
         VStack(spacing: 9) {
-            // Equal-sized leading and trailing slots keep the title
-            // centered over the entire snippet, not merely next to the icon.
-            HStack(spacing: 10) {
-                Image(systemName: "tram.fill")
-                    .font(.system(size: 15, weight: .semibold))
-                    .frame(width: 32, height: 32)
-                    .glassEffect(.regular, in: .circle)
-                    .accessibilityHidden(true)
-
-                Spacer(minLength: 0)
-
-                Text(demo ? "天府通 · 测试二维码" : "天府通乘车码")
-                    .font(.headline)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-                    .multilineTextAlignment(.center)
-
-                Spacer(minLength: 0)
-
-                Color.clear
-                    .frame(width: 32, height: 32)
-                    .accessibilityHidden(true)
-            }
-            .frame(maxWidth: .infinity)
+            // Keep the glyph above its glass background, so the symbol
+            // remains visible even if the system composites nested glass
+            // differently within an App Intents Snippet.
+            Image(systemName: "tram.fill")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 40, height: 40)
+                .background {
+                    Circle()
+                        .glassEffect(.regular, in: .circle)
+                }
+                .accessibilityLabel("天府通乘车码")
+                .frame(maxWidth: .infinity, alignment: .center)
 
             QRCodeModulesShape(matrix: matrix)
                 .fill(Color.black)
