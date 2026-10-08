@@ -1,8 +1,16 @@
 # TianfuGlass · 天府通 Glass
 
-当前候选版本：**v0.8.2（Build 21）**。
+当前候选版本：**v0.8.3（Build 22）**。
 
 > 本仓库是公开仓库。禁止在源码、CI、README、日志、截图及 Issues 中上传真实 Cookie、TGT、Token 或动态乘车码。用户此前在对话中展示过会话凭证，建议通过官方渠道重新登录使旧凭证失效。
+
+## v0.8.3 · 正式取码统一到已验证的 SnippetIntent 入口
+
+- **v0.8.2 真机结果：**「演示天府通乘车码」PASS（完整二维码）；「诊断基础二维码」PASS（文字、二维码）；v0.8.1「诊断文字弹窗」PASS。由此确认自动注册的 App Shortcut 可以在 iOS 27 中展示二维码 Snippet，且现有 `QRCodeMatrix`、矢量 `Shape` 与正式演示卡片无需修改。
+- v0.8.1 的正式入口 `FetchFreshTransitCodeIntent` 仍然是直接返回视图的普通 `AppIntent`。本版只将它更改为 `SnippetIntent` 并设置 `isDiscoverable = true`，与 v0.8.2 已通过的 `PreviewTransitCodeIntent` 使用相同宿主类型。
+- **正式 API 请求、Keychain Cookie、超时/重定向防护、JSON 解析、二维码生成与 Liquid Glass/Done 系统表现全部保持原样**。不删除旧版快捷指令兼容入口。
+- **剩余验收：** 安装 v0.8.3，在已保存有效 Cookie 的设备上运行「获取天府通乘车码」，检查是否能联网取到新码并正确悬浮显示（不能仅以 Xcode 编译通过宣称真实 API 和扫码已经验证）。若失败，仅报告不含 Cookie/真实二维码的错误文案与页面现象；不要上传敏感凭证或暴露真码。
+- v0.8.2 的结果支持上述**单点修复方向**，但尚不能证明后台网络请求及登录态一定可用。无须重复已通过的文字、演示、基础 QR 测试，先验证正式入口。
 
 ## v0.8.2 · 针对「文字 PASS / 二维码 Done-only」的隔离诊断
 
