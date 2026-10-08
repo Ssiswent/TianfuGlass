@@ -1,78 +1,38 @@
-# TianfuGlass · 天府通 Liquid Glass
+# TianfuGlass · 天府通 Glass
 
-iOS 26+ SwiftUI + App Intents Snippet，当前测试版本 **v0.6.5（Build 14）**。
+iOS 26+ / iOS 27 SwiftUI + App Intents Snippet，用于在 iPhone「快捷指令」中直接展示天府通乘车二维码，不打开 App 主界面。
 
-> **注意：本仓库目前是 Public。** 请勿提交真实 Cookie、TGT、Token、乘车码、含登录信息的快捷指令文件或截图。
+当前测试版本 **v0.6.6 (Build 15)**。**仓库为 Public**：禁止提交真实 Cookie、TGT、Token、动态二维码内容或包含账号信息的快捷指令。
 
-## 主要使用方式
+## 使用
 
-保留原「天府通」快捷指令中的网络请求和 Cookie（只留在自己的 iPhone 上）。从响应中读取 `result.code` 的**原始字符串**：
+1. 原来的「天府通」快捷指令继续自行请求接口，并从响应字典中提取 `result.code`（不要误取外层响应状态 `code`）。
+2. 添加 **「显示天府通乘车码」** 操作；唯一参数「乘车码内容」选择 `result.code` 原始字符串。新操作不需要有效期。
+3. 保留该操作的系统「运行时显示」选项，从快捷指令列表或其他支持 Snippet 的入口执行。
+4. 每次需要新乘车码时重新运行快捷指令。
 
-```json
-{
-  "msg": "success",
-  "code": 1,
-  "result": {
-    "isBinded": true,
-    "expiresIn": "60",
-    "code": "<二维码原始字符串>"
-  }
-}
-```
+保留兼容入口「显示天府通乘车码 V3」，但其有效期输入现在不显示在乘车码界面上。代码不会把原始二维码字符串解码、裁剪或写入持久化存储。
 
-请注意：外层 `code: 1` 是状态码，**不是**二维码内容。
+## UI 设计与 iOS 27 限制
 
-在「获取 URL 的内容」之后使用两个「获取字典值」：
-1. 从 API 返回取 `result`。
-2. 从该 `result` 取 `code`。
-3. 检查响应成功且 `code` 有值，然后添加新版 **「显示天府通乘车码」** App Intent；把唯一的「乘车码内容」设为第二步的魔法变量。
-4. 删除旧的二维码生成 / 快速查看操作，以及不需要的重复循环。
+- 卡片顶部仅保留居中的 `tram.fill` SF Symbol，不显示文字标题。
+- 图标采用**已在 v0.6.4 真机成功显示**的结构：`Image` 本身不加 `.glassEffect`，由独立的圆形背景使用 `.glassEffect(.regular, in: .circle)`。v0.6.5 将 `.glassEffect` 直接应用到图标导致整个图标在实际 Snippet 消失，因此 v0.6.6 恢复经过验证的 40pt / 18pt 图标布局。玻璃圆形底座在不同背景下可能非常淡；保证图标可见优先于强调独立玻璃效果。
+- 二维码绘制仍使用 `QRCodeMatrix` 与 `QRCodeModulesShape`，保持 228pt 黑白模块区、纯白背景与四模块 quiet zone。不能把二维码置于半透明玻璃上。
+- 正式乘车码不显示有效期、不增加额外确认或刷新按钮。原生 Done 按钮由 iOS 提供。
+- **不干预 Snippet 弹出位置、Liquid Glass 系统动画、完成按钮**。
+- 运行快捷指令时灵动岛出现临时 App 图标和完成勾号是 iOS 的运行状态提示，并非此 App 自行创建的 Live Activity。App Intents 没有提供可在保留 Snippet 的同时关闭此系统提示的公开 API。不要通过关闭「运行时显示」、修改设备动态效果或添加不可靠的隐藏技巧尝试规避。
 
-**新版操作仅有一个参数，不需要有效期。** 为避免破坏用户已经创建的快捷指令，旧版 **「显示天府通乘车码 V3」** 继续保留并接受旧的有效期参数，但输出界面也不会显示时间。要在快捷指令编辑界面去掉这个旧参数，删除旧 V3 操作并添加新版操作。
+## 验证状态
 
-二维码原文直接编码，不进行 Base64 解码、trim 或其他变换。空白内容或过长内容会被拒绝；二维码模块保持黑白及四模块 quiet zone，不在二维码上叠加玻璃材质。**新码必须重新运行快捷指令获取。**
+已由用户真机确认：
 
-## v0.6.5 交通图标微调（待真机验收）
+- A / C 纯文字 Snippet、D 参数化文字 Snippet：通过。
+- B 矢量二维码 Snippet：通过。
+- v0.6.4 顶部 `tram.fill` 图标：可见，玻璃圆形底座不明显。
+- v0.6.5 顶部图标：**消失（失败）**；二维码、Done 正常。
 
-- 顶部继续仅显示居中 SF Symbol `tram.fill`，不恢复文字标题。
-- 原生 Liquid Glass 圆形区域由 40pt 增至 **48pt**，图标由 18pt 增至 **20pt**，直接应用 `.glassEffect(.regular, in: .circle)`，不叠加人为描边、渐变或动画。
-- **不调整**二维码 228pt 绘制区、纯白底色、黑色模块、静区、App Intents 参数链或 iOS 原生 Snippet / Done 动画。
-- 由于系统可能合成嵌套玻璃材质，**不能仅以 Xcode 编译通过就保证图标底座在所有壁纸下明显可见**；在 iOS 27 真机截图中复核，若仍不明显则保持简洁图标而不无限增加装饰。
+v0.6.6 撤回导致图标消失的单独改动，**需要真机确认显示恢复**。同时，真实闸机读取乘车码还没有通过正式验收；CI 成功不代表闸机一定兼容。
 
-## v0.6.4 原生玻璃交通图标与二维码
+## 构建及下载
 
-- 根据实际截图，v0.6.3 的文字标题已居中，用户选择进一步简化为**顶部只显示一个居中的交通图标**，不再显示标题文字。
-- 使用 SF Symbols `tram.fill`、40pt 触控外观尺寸，交通图标本身位于 Liquid Glass 圆形背景之上，防止在 Snippet 中嵌套玻璃合成时图形随材质不可见；图标保留辅助功能名称。
-- 二维码本身**保留纯白背景**、黑色模块以及原有四模块静区，继续使用已通过验证的矢量二维码实现。透明、渐变或玻璃背景可能降低某些扫码器上的对比度，不采用。
-- 不更改系统 Done 按钮、Snippet 出场位置与原生动画，也不引入自定义刷新、确认或倒计时。
-- **仅源码修改和 CI 验证，不代表实际机型上图标可见性已通过验收。** 安装后请确认顶部图标可见、居中且二维码内容完整。
-
-## iOS 27 系统 UI 与 Liquid Glass（v0.6.2 基础）
-
-- 「快捷指令」编辑器中的 **「运行时显示」** 是系统的结果展示选项，**不是本项目的 `@Parameter`**。建议保持开启；它只需在编辑快捷指令时设置，不会每次运行再询问。应用不可通过公开 App Intents API 强行删除这一系统开关。
-- Result Snippet 顶部浮层、内置 **Done** 按钮、呈现位置和入场动画由 iOS 管理。**不添加自定义动画、位移、禁用动画事务或伪装的关闭按钮**。
-- 仅为标题的交通图标加一个 32pt 原生 `.glassEffect(.regular, in: .circle)`；二维码及其 quiet zone 保留高对比度纯黑白，不在二维码上叠加玻璃。
-- 保留已验证的 `QRCodeMatrix` 与矢量 `Shape` 绘制算法、228pt 二维码区，避免重新引入原先 Done-only 的图像渲染问题。
-- 显示时只需要标题、二维码和系统 Done；不展示有效期、倒计时、无实际作用的刷新按钮，也不添加二次确认。
-- v0.6.1 的用户运行截图证实结果 Snippet 已呈现标题和二维码且没有有效期。**v0.6.3 的居中布局仍需真机确认**；闸机扫码适配未验收。
-
-## UI 与系统约束
-
-- Snippet 由 iOS 顶部弹层展示，不需要打开 TianfuGlass 主界面。
-- 系统管理 Snippet 的位置、Done 按钮、Liquid Glass 外观和入场动画；不干预或试图禁用原生动画。
-- 正式乘车码 Snippet 只显示标题及二维码；演示二维码才显示「不可乘车」提示。
-- 本项目不主动请求 API、保存 Cookie 或持久化乘车码。请勿把实时码写入日志或公开截图。
-
-## 验证情况
-
-用户已在 iOS 27 真机验证 App 原生弹窗、A/C 文字 Snippet、D 参数化文字 Snippet、B 矢量二维码 Snippet 可正常展示。
-
-**v0.6.1 新版单参数 Intent 与实际闸机扫码尚未真机验收。** 请先用 `TIANFU-GLASS-TEST-NOT-VALID` 验证，只在显示正确后换成 `result.code`。
-
-## CI / Releases
-
-推送源码到 `main` 后 GitHub Actions 使用 Xcode 27 构建未签名 IPA，验证压缩包，自动发布独立 GitHub **Pre-release**，并上传 SHA-256 文件。
-
-[下载 Releases](https://github.com/Ssiswent/TianfuGlass/releases)
-
-IPA 仍需经签名流程才能安装到普通 iPhone。构建成功不等于闸机兼容性验收成功。
+主分支中的 `Sources/**`、`project.yml` 或工作流变更自动触发 [GitHub Actions](https://github.com/Ssiswent/TianfuGlass/actions/workflows/build-unsigned-ipa.yml)，使用 Xcode 27 编译，发布包含未签名 IPA 及 SHA-256 的独立 [GitHub Pre-release](https://github.com/Ssiswent/TianfuGlass/releases)。未签名 IPA 在普通 iPhone 安装前需要自行签名。
