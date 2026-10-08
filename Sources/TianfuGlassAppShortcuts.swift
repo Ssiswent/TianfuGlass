@@ -99,6 +99,32 @@ struct TianfuGlassShortcutsProvider: AppShortcutsProvider {
             shortTitle: "诊断基础二维码",
             systemImageName: "qrcode.viewfinder"
         )
+        // New type identities diagnose whether iOS is retaining old
+        // App Shortcut metadata after repeated installs and updates.
+        AppShortcut(
+            intent: RecoveryTextSnippetIntent(),
+            phrases: [
+                "用\(.applicationName)恢复验证文字"
+            ],
+            shortTitle: "恢复验证 · 文字",
+            systemImageName: "text.bubble"
+        )
+        AppShortcut(
+            intent: RecoveryDemoSnippetIntent(),
+            phrases: [
+                "用\(.applicationName)恢复验证演示码"
+            ],
+            shortTitle: "恢复验证 · 演示二维码",
+            systemImageName: "qrcode"
+        )
+        AppShortcut(
+            intent: RecoveryLiveSnippetIntent(),
+            phrases: [
+                "用\(.applicationName)恢复验证真实码"
+            ],
+            shortTitle: "恢复验证 · 获取乘车码",
+            systemImageName: "tram.fill"
+        )
         // Independent control: if both this and the QR view show only Done,
         // the host is dropping views rather than the QR renderer failing.
         AppShortcut(
