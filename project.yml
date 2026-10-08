@@ -12,16 +12,23 @@ targets:
     platform: iOS
     sources:
       - path: Sources
+    preBuildScripts:
+      - name: Generate reproducible AppIcon
+        script: |
+          cd "$PROJECT_DIR"
+          /usr/bin/swift scripts/generate_app_icon.swift
+        basedOnDependencyAnalysis: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ssiswent.TianfuGlass
         PRODUCT_NAME: TianfuGlass
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: "天府通 Glass"
         INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
-        CURRENT_PROJECT_VERSION: "15"
-        MARKETING_VERSION: "0.6.6"
+        CURRENT_PROJECT_VERSION: "16"
+        MARKETING_VERSION: "0.7.0"
         SWIFT_EMIT_LOC_STRINGS: "YES"
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MACCATALYST: "NO"
