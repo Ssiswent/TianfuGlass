@@ -33,9 +33,10 @@ private struct FixedHeightQRLoadingView: View {
                 } else {
                     VStack(spacing: 10) {
                         ProgressView()
+                            .tint(.blue)
                         Text("正在准备演示乘车码")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.black.opacity(0.65))
                     }
                 }
             }
