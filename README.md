@@ -2,7 +2,7 @@
 
 iOS 26+ / iOS 27 SwiftUI + App Intents Snippet，用于在 iPhone「快捷指令」中直接展示天府通乘车二维码，不打开 App 主界面。
 
-当前测试版本 **v0.6.6 (Build 15)**。**仓库为 Public**：禁止提交真实 Cookie、TGT、Token、动态二维码内容或包含账号信息的快捷指令。
+当前测试版本 **v0.7.0 (Build 16)**。**仓库为 Public**：禁止提交真实 Cookie、TGT、Token、动态二维码内容或包含账号信息的快捷指令。
 
 ## 使用
 
@@ -12,6 +12,15 @@ iOS 26+ / iOS 27 SwiftUI + App Intents Snippet，用于在 iPhone「快捷指令
 4. 每次需要新乘车码时重新运行快捷指令。
 
 保留兼容入口「显示天府通乘车码 V3」，但其有效期输入现在不显示在乘车码界面上。代码不会把原始二维码字符串解码、裁剪或写入持久化存储。
+
+## v0.7.0 · 正式 App 图标
+
+- 不再使用自动生成的空白占位图标。新增原创的**蓝青渐变背景与简化白色正面列车**作为 App Icon；没有文字，缩小至灵动岛尺寸仍有可辨识轮廓。
+- `scripts/generate_app_icon.swift` 用 Swift / CoreGraphics 绘制 1024×1024 PNG；`Sources/Assets.xcassets/AppIcon.appiconset/Contents.json` 将其声明为 `AppIcon`；Xcode 构建设置选择此图标，并由系统进行图标裁剪和显示。
+- 这是**Liquid Glass 风格的单张高分辨率应用图标**，不是由 Icon Composer 生成的多层 .icon 文件。iOS 会按照当前系统外观显示标准应用图标，但完整多层折射和材质响应需另行制作 Icon Composer 原生分层文件。
+- GitHub Actions 会自动生成图标、确认最终 IPA 的 `CFBundleIcons` 包含 `AppIcon`，并额外在 Releases 附上一张 1024px 图标预览。
+- **灵动岛的快捷指令执行提示无法由此关闭**，这次只替换默认占位图标，不改变系统运行指示、Snippet、二维码或原生动画。
+- 实际在灵动岛、主屏幕和深色/着色模式的观感，需要 v0.7.0 真机验收。
 
 ## UI 设计与 iOS 27 限制
 
