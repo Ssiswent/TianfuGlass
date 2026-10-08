@@ -1,38 +1,39 @@
 import AppIntents
 import Foundation
+import SwiftUI
 
-/// One-tap, parameter-free shortcut registered by the app. The existing
-/// parameterized V3 actions are intentionally retained for compatibility.
+/// App Shortcuts directly return a static view. v0.8.0's nested SnippetIntent
+/// showed only Done when launched by the built-in Shortcuts entrypoint on iOS 27.
+/// Keep the old nested V3 intent for existing user-created shortcuts.
 struct FetchFreshTransitCodeIntent: AppIntent {
     static let title: LocalizedStringResource = "获取天府通乘车码"
-    static let description = IntentDescription("由天府通 Glass 自动联网取码，并直接显示系统悬浮乘车二维码。")
+    static let description = IntentDescription("由天府通 Glass 自动联网取码，直接显示系统悬浮乘车二维码。")
     static var supportedModes: IntentModes { .background }
 
-    func perform() async throws -> some IntentResult & ShowsSnippetIntent {
+    @MainActor
+    func perform() async throws -> some IntentResult & ShowsSnippetView {
         let code = try await TransitCodeAPIClient.fetchCode()
-        return .result(
-            snippetIntent: TransitCodePresentationSnippetIntent(
-                payload: code,
-                demo: false
-            )
-        )
+        guard let matrix = QRCodeMatrix.encode(code) else {
+            throw TransitCodeError.qrGenerationFailed
+        }
+        return .result(view: VectorTransitCodeSnippetView(matrix: matrix, demo: false))
     }
 }
 
-/// Offline demonstration ensures the system entrypoint works before live
-/// cookie setup and server-specific behavior are tested.
+/// Offline demonstration uses the same direct-view path as the real shortcut.
 struct PreviewTransitCodeIntent: AppIntent {
     static let title: LocalizedStringResource = "演示天府通乘车码"
-    static let description = IntentDescription("不联网、不使用登录信息，测试自动注册的乘车码悬浮弹窗。")
+    static let description = IntentDescription("无需网络或 Cookie，验证原生悬浮二维码显示。")
     static var supportedModes: IntentModes { .background }
 
-    func perform() async throws -> some IntentResult & ShowsSnippetIntent {
-        return .result(
-            snippetIntent: TransitCodePresentationSnippetIntent(
-                payload: "TIANFU-GLASS-DEMO-CODE-NOT-VALID-FOR-TRAVEL",
-                demo: true
-            )
-        )
+    @MainActor
+    func perform() async throws -> some IntentResult & ShowsSnippetView {
+        guard let matrix = QRCodeMatrix.encode(
+            "TIANFU-GLASS-DEMO-CODE-NOT-VALID-FOR-TRAVEL"
+        ) else {
+            throw TransitCodeError.qrGenerationFailed
+        }
+        return .result(view: VectorTransitCodeSnippetView(matrix: matrix, demo: true))
     }
 }
 
@@ -54,6 +55,16 @@ struct TianfuGlassShortcutsProvider: AppShortcutsProvider {
             ],
             shortTitle: "演示乘车码",
             systemImageName: "qrcode"
+        )
+        // Independent control: if both this and the QR view show only Done,
+        // the host is dropping views rather than the QR renderer failing.
+        AppShortcut(
+            intent: GlassDirectViewDiagnosticIntent(),
+            phrases: [
+                "用\(.applicationName)测试文字显示"
+            ],
+            shortTitle: "诊断文字弹窗",
+            systemImageName: "text.bubble"
         )
     }
 }
