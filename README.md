@@ -1,8 +1,19 @@
 # TianfuGlass · 天府通 Glass
 
-当前候选版本：**v0.8.3（Build 22）**。
+当前候选版本：**v0.8.4（Build 23）**。
 
 > 本仓库是公开仓库。禁止在源码、CI、README、日志、截图及 Issues 中上传真实 Cookie、TGT、Token 或动态乘车码。用户此前在对话中展示过会话凭证，建议通过官方渠道重新登录使旧凭证失效。
+
+## v0.8.4 · 固定高度加载实验（不修改真实取码）
+
+- iOS 27 真机反馈：v0.8.3 的正式 API 乘车码能够显示，但因为 `FetchFreshTransitCodeIntent.perform()` 先等待网络完成再返回视图，系统提前显示只有 Done 的矮弹层，之后才突然扩展成二维码卡片。
+- Apple 的 `SnippetIntent` 建议尽快返回视图、避免长时间阻塞 `perform()`；公开的 `SnippetIntent.reload()` 可在底层数据变化时更新已显示 Snippet。但宿主弹层的最初呈现与尺寸动画属于 iOS 控制范围。
+- **为避免破坏已经能正常乘车的正式取码，v0.8.4 仅新增两项离线实验入口**，均先渲染与最终结果同尺寸的白色 228pt 卡片与原生加载指示，约 2 秒后替换为演示二维码；不涉及真实 Cookie、API 或闸机。
+- 「**诊断原位加载**」：直接由 `SnippetIntent` 返回 SwiftUI `@State + .task` 视图。观察主机是否支持在 Snippet 生命周期内原位改变视图，不调用 `reload()`。
+- 「**诊断重载加载**」：通过一个无参数 AppIntent 创建唯一测试请求标识，返回加载中的 SnippetIntent；2 秒后调用 `SnippetIntent.reload()` 刷新。测试这个官方刷新机制是否能保持弹层高度，**以及是否会短暂出现只有 Done 的宿主壳**。
+- 测试时两项都等待二维码出现后再点击 Done。**不要在「诊断重载加载」的 2 秒等待期间提前关闭**：Apple 文档说明 `reload()` 在 Snippet 未显示时也可能重新唤出弹层，这个实验尚未建立可靠的关闭状态感知。
+- **真机通过后再决定真实 API 使用哪一种方案**。不能仅以 Xcode 构建成功就宣称解决闪跳。
+- 正式「获取天府通乘车码」`SnippetIntent`、Keychain、API、已通过闸机识别的二维码绘制、Glass、Done 和系统动画全部保持 v0.8.3 不变。
 
 ## v0.8.3 · 正式取码统一到已验证的 SnippetIntent 入口
 
