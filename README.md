@@ -36,6 +36,19 @@ iOS 26+ SwiftUI / App Intents 工程。当前诊断版本 **v0.5.0 (6)**。
 
 不要从 App 内的 `Button(intent:)` 结果推断快捷指令 Snippet 行为。控制中心 Control 调用也不支持展示 Snippet。
 
+## 自动下载地址：GitHub Releases（自 CI 发布功能启用后）
+
+**[前往 TianfuGlass Releases 下载 IPA](https://github.com/Ssiswent/TianfuGlass/releases)**
+
+`main` 分支上每次成功执行 Xcode 27 编译及 IPA 校验的构建，都会自动生成一个独立的 **Pre-release**，上传：
+
+- `TianfuGlass-v<版本号>-build<内部构建号>-unsigned.ipa`
+- 同名的 `.sha256` 校验文件。
+
+Release 标签包含 App 版本、CI 构建序号和运行尝试次数，例如 `v0.5.0-ci.12.1`，不会覆盖以前的测试版本。Github Actions 的 Artifact 仍保留七天作为备份。若构建或发布失败，则不会误报 Release 成功。自动发布仅限 `main` 分支；运行前需 GitHub Actions `contents: write` 权限。
+
+目前是诊断阶段，Release 标记为 **Pre-release** 而非正式稳定版。未签名 IPA 仍须签名后才能在普通 iPhone 安装。
+
 ## 构建
 
 [GitHub Actions · Build unsigned IPA (Xcode 27)](https://github.com/Ssiswent/TianfuGlass/actions/workflows/build-unsigned-ipa.yml)
