@@ -51,8 +51,11 @@ struct TransitCodePresentationSnippetIntent: SnippetIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ShowsSnippetView {
-        return .result(view: TransitCodeSnippetView(
-            payload: payload,
+        guard let matrix = QRCodeMatrix.encode(payload) else {
+            throw TransitCodeError.qrGenerationFailed
+        }
+        return .result(view: VectorTransitCodeSnippetView(
+            matrix: matrix,
             lifetime: lifetime,
             demo: demo
         ))
@@ -107,6 +110,7 @@ struct GlassQRDiagnosticIntent: AppIntent {
 enum TransitCodeError: LocalizedError {
     case emptyPayload
     case payloadTooLong
+    case qrGenerationFailed
 
     var errorDescription: String? {
         switch self {
@@ -114,6 +118,8 @@ enum TransitCodeError: LocalizedError {
             "没有收到乘车码内容，请检查 result.code。"
         case .payloadTooLong:
             "二维码文本超过 2000 字节，不能直接生成。"
+        case .qrGenerationFailed:
+            "Core Image 未能生成二维码，请检查输入文本。"
         }
     }
 }
@@ -138,6 +144,50 @@ struct GlassDirectViewDiagnosticIntent: AppIntent {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
+        )
+    }
+}
+
+
+/// Differentiates SnippetIntent parameter transport from QR rendering.
+struct GlassParameterizedTextDiagnosticIntent: AppIntent {
+    static let title: LocalizedStringResource = "Glass 诊断 D · 参数化文字"
+    static let description = IntentDescription("用固定示例字符串测试 SnippetIntent 的参数传递。")
+    static let openAppWhenRun = false
+    static let isDiscoverable = true
+
+    func perform() async throws -> some IntentResult & ShowsSnippetIntent {
+        return .result(
+            snippetIntent: GlassParameterizedTextSnippetIntent(
+                message: "GLASS-PARAMETER-TRANSFER-OK"
+            )
+        )
+    }
+}
+
+struct GlassParameterizedTextSnippetIntent: SnippetIntent {
+    static let title: LocalizedStringResource = "参数化文字 Snippet"
+    static let isDiscoverable = false
+
+    @Parameter(title: "诊断文本")
+    var message: String
+
+    init() {}
+
+    init(message: String) {
+        self.message = message
+    }
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ShowsSnippetView {
+        return .result(view:
+            VStack(alignment: .leading, spacing: 6) {
+                Text("参数化 Snippet 测试")
+                    .font(.headline)
+                Text(message)
+                    .font(.subheadline)
+            }
+            .padding(16)
         )
     }
 }
