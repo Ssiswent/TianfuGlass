@@ -26,7 +26,7 @@ private struct TianfuGlassHomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Label("天府通 · Glass v0.7.0", systemImage: "tram.fill")
+                    Label("天府通 · Glass v0.7.1", systemImage: "tram.fill")
                         .font(.title2.bold())
 
                     Text("运行快捷指令即可显示乘车码，无需先打开此 App。真实 Cookie 和接口请求仍留在你自己的快捷指令中。")
