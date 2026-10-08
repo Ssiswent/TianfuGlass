@@ -26,7 +26,7 @@ private struct TianfuGlassHomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Label("天府通 · Glass v0.6.0", systemImage: "tram.fill")
+                    Label("天府通 · Glass v0.6.1", systemImage: "tram.fill")
                         .font(.title2.bold())
 
                     Text("运行快捷指令即可显示乘车码，无需先打开此 App。真实 Cookie 和接口请求仍留在你自己的快捷指令中。")
@@ -37,8 +37,8 @@ private struct TianfuGlassHomeView: View {
                         Label("快捷指令接入", systemImage: "bolt.fill")
                             .font(.headline)
                         Text("① 请求接口并取得 result.code。")
-                        Text("② 添加「显示天府通乘车码 V3」，把乘车码内容设为 code，有效期先填 60 秒。")
-                        Text("③ 确认成功后，可改用接口返回的 expiresIn。重新运行快捷指令才会获取新码。")
+                        Text("② 添加新版「显示天府通乘车码」，将唯一的「乘车码内容」设为 code。")
+                        Text("③ 每次需要新乘车码，重新运行快捷指令即可。旧版 V3 仍然兼容已有快捷指令。")
                         Text("提示：Snippet 的出现位置、Done 按钮和系统动画由 iOS 控制。")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -104,7 +104,7 @@ private struct TianfuGlassHomeView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("诊断说明").font(.headline)
                         Text("A、C、D 和 B 已分别通过快捷指令真机测试。")
-                        Text("当前正式入口是「显示天府通乘车码 V3」，请先传入无敏感信息的测试字符串验证完整路径。")
+                        Text("推荐使用「显示天府通乘车码」（仅需 code），首次请用无敏感信息的测试字符串验证。")
                         Text("不要公开分享包含 Cookie、会话令牌或真实乘车码的快捷指令。")
                     }
                     .font(.subheadline)
@@ -132,7 +132,7 @@ private struct TianfuGlassHomeView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .padding(24)
                         case .qr:
-                            TransitCodeSnippetView(payload: diagnosticPayload, lifetime: 60, demo: true)
+                            TransitCodeSnippetView(payload: diagnosticPayload, demo: true)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .padding(12)
                         }
@@ -165,7 +165,6 @@ enum QRCodeRenderer {
 
 struct TransitCodeSnippetView: View {
     let payload: String
-    let lifetime: Int
     let demo: Bool
 
     var body: some View {
@@ -196,13 +195,12 @@ struct TransitCodeSnippetView: View {
                     .frame(height: 196)
             }
 
-            HStack(spacing: 6) {
-                Image(systemName: demo ? "checkmark.shield" : "clock")
-                Text(demo ? "演示数据 · 不能用于乘车" : "有效期约 \(lifetime) 秒")
+            if demo {
+                Label("演示数据 · 不能用于乘车", systemImage: "checkmark.shield")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
             }
-            .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity)
         }
         .padding(12)
         .frame(maxWidth: 320)
