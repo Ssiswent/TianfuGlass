@@ -10,7 +10,7 @@ on:
       - "project.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: tianfuglass-unsigned-${{ github.ref }}
@@ -54,26 +54,67 @@ jobs:
             build 2>&1 | tee "$RUNNER_TEMP/xcodebuild.log"
 
       - name: Package and verify unsigned IPA
+        id: package
         shell: bash
         run: |
           set -euo pipefail
           APP="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos/TianfuGlass.app"
           test -f "$APP/Info.plist"
+          VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist")"
+          BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist")"
+          IPA="TianfuGlass-v${VERSION}-build${BUILD}-unsigned.ipa"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+          echo "ipa_name=$IPA" >> "$GITHUB_OUTPUT"
           mkdir -p "$RUNNER_TEMP/ipa/Payload"
           ditto "$APP" "$RUNNER_TEMP/ipa/Payload/TianfuGlass.app"
-          (cd "$RUNNER_TEMP/ipa" && ditto -c -k --sequesterRsrc --keepParent Payload "$GITHUB_WORKSPACE/TianfuGlass-v0.5.0-unsigned.ipa")
-          test -s TianfuGlass-v0.5.0-unsigned.ipa
-          unzip -t TianfuGlass-v0.5.0-unsigned.ipa > /dev/null
-          unzip -Z1 TianfuGlass-v0.5.0-unsigned.ipa | grep -F 'Payload/TianfuGlass.app/Info.plist'
+          (cd "$RUNNER_TEMP/ipa" && ditto -c -k --sequesterRsrc --keepParent Payload "$GITHUB_WORKSPACE/$IPA")
+          test -s "$IPA"
+          unzip -t "$IPA" > /dev/null
+          unzip -Z1 "$IPA" | grep -F 'Payload/TianfuGlass.app/Info.plist'
+          shasum -a 256 "$IPA" > "$IPA.sha256"
           echo "Unsigned IPA archive verified."
 
-      - name: Upload unsigned IPA artifact
+      - name: Upload unsigned IPA artifact (backup)
         uses: actions/upload-artifact@v4
         with:
-          name: TianfuGlass-v0.5.0-unsigned-IPA
-          path: TianfuGlass-v0.5.0-unsigned.ipa
+          name: TianfuGlass-v${{ steps.package.outputs.version }}-build${{ steps.package.outputs.build }}-unsigned-IPA
+          path: ${{ steps.package.outputs.ipa_name }}
           if-no-files-found: error
           retention-days: 7
+
+      - name: Publish unsigned IPA to GitHub Releases
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IPA_NAME: ${{ steps.package.outputs.ipa_name }}
+          APP_VERSION: ${{ steps.package.outputs.version }}
+          APP_BUILD: ${{ steps.package.outputs.build }}
+        run: |
+          set -euo pipefail
+          command -v gh >/dev/null
+          # Unique per run/attempt: never overwrite or silently replace an older build.
+          TAG="v${APP_VERSION}-ci.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+          {
+            echo "Automated **unsigned** iOS IPA (Xcode 27)."
+            echo
+            echo "- App version: ${APP_VERSION} (${APP_BUILD})"
+            echo "- Commit: ${GITHUB_SHA}"
+            echo "- Build: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo "- Requires signing before installation on a standard iPhone."
+            echo "- Diagnostic build: on-device App Intents Snippet behavior requires validation."
+          } > "$RUNNER_TEMP/release-notes.md"
+          gh release create "$TAG" "$IPA_NAME" "$IPA_NAME.sha256" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "TianfuGlass v${APP_VERSION} (build ${APP_BUILD}, CI #${GITHUB_RUN_NUMBER})" \
+            --notes-file "$RUNNER_TEMP/release-notes.md" \
+            --prerelease \
+            --latest=false
+          RELEASE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+          echo "### [Download unsigned IPA from GitHub Release](${RELEASE_URL})" >> "$GITHUB_STEP_SUMMARY"
+          echo "Published ${IPA_NAME} to ${RELEASE_URL}"
 
       - name: Upload build log on failure
         if: failure()
