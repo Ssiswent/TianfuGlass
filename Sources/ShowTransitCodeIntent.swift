@@ -117,3 +117,27 @@ enum TransitCodeError: LocalizedError {
         }
     }
 }
+
+    
+/// A third, deliberately minimal diagnostic that returns a static snippet
+/// directly, without chaining a secondary SnippetIntent.
+struct GlassDirectViewDiagnosticIntent: AppIntent {
+    static let title: LocalizedStringResource = "Glass 诊断 C · 直接返回文字"
+    static let description = IntentDescription("离线诊断：直接返回一段 SwiftUI 文本，不请求二维码接口。")
+    static let openAppWhenRun = false
+    static let isDiscoverable = true
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ShowsSnippetView {
+        return .result(
+            view: VStack(alignment: .leading, spacing: 8) {
+                Label("GLASS DIRECT VIEW · 测试通过", systemImage: "checkmark.circle.fill")
+                    .font(.headline)
+                Text("这是直接返回的静态 SwiftUI Snippet。")
+                    .font(.subheadline)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        )
+    }
+}
