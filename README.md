@@ -1,35 +1,64 @@
 # TianfuGlass · 天府通 Liquid Glass
 
-iOS 26+ SwiftUI / App Intents 工程。当前诊断版本 **v0.5.2 (8)**。
+iOS 26+ / iOS 27 SwiftUI + App Intents Snippet。当前候选版本 **v0.6.0 (9)**。
 
-## 诊断结论
+**本仓库当前是 Public。严禁提交真实 Cookie、TGT、Token、二维码载荷或完整快捷指令。**
 
-由用户 iOS 27 真机确认：
+## 现在的目标
 
-- App 内 SwiftUI 文字 Sheet、二维码 Sheet：**PASS**。
-- 从快捷指令列表运行「Glass 诊断 A · 纯文字」和「Glass 诊断 C · 直接返回文字」：**PASS**。
-- 旧版「Glass 诊断 B · 测试二维码」仅出现 Done；用户已确认 **v0.5.0 中 D、B 均 PASS**，矢量二维码可正常显示，但两者的内容出现从右下角移入居中的动画。
+使用原有的「天府通」快捷指令执行 API 请求，然后调用「显示天府通乘车码 V3」展示二维码。**不打开 TianfuGlass App 主界面**；Snippet 的位置、Done 按钮、转场和 Liquid Glass 均遵循 iOS 原生行为，不干预系统动画。
 
-**v0.5.2 决策：保留系统原生 Snippet 入场动画。** 用户在 v0.5.1 真机录屏确认，禁用 SwiftUI 内容动画后系统转场仍存在；该入场动画由 iOS 管理，不需要在 App 内进一步规避。现已撤回此前为动画实验加入的固定 292pt 宽度、`.contentTransition(.identity)` 和 `.transaction` 禁用动画操作；保留 v0.5.0 已真机通过的矢量二维码与参数化 Snippet 行为。v0.5.2 仍需签名安装后复验。Apple 官方说明，Snippet 由系统呈现，且 `SnippetIntent` 可能多次执行；应快速返回轻量内容，参数传递应保持最小且不可变。
+### 一次性接入快捷指令
 
-## v0.5.0 二维码渲染改动（已真机验证）
+保留现有的「获取 URL 内容」及其个人 Cookie 配置；**这些数据只留在设备的快捷指令中**，不要提交到仓库。
 
-1. **B 的二维码不再使用 `Image(decorative: CGImage)`**，新建 QR 位图矩阵（在 SnippetIntent `perform()` 中生成），通过纯 SwiftUI `Shape` 的 Path 绘制黑色模块，保留 4 个模块的白色 quiet zone。无需在 `View.body` 中运行 `CIContext`。
-2. 原「显示天府通乘车码 V3」也复用新的矢量二维码视图，但仍需真机验证。
-3. 增加 **「Glass 诊断 D · 参数化文字」**：和 B 一样通过 `SnippetIntent` 传递一个 `@Parameter String`，视图只含文字。
+原 API 结构类似：
 
-## v0.5.2 验证及后续工作
+```json
+{
+  "msg": "success",
+  "code": 1,
+  "result": {
+    "isBinded": true,
+    "expiresIn": "60",
+    "code": "<真实二维码字符串>"
+  }
+}
+```
 
-安装后只需从「快捷指令」列表运行 D（参数化文字）与 B（测试二维码），确认仍能显示完整内容；系统原生的入场动画属于预期行为，不再作为失败项。无需改变「减弱动态效果」设置。
+注意：**外层 `code: 1` 是状态码，不是二维码内容**。真正的数据是 `result.code`。
 
-待确认后再接入真实的 `result.code`（传入 App Intent 的字符串），不要在仓库中加入 Cookie 或账号令牌。二维码原始值可能是短期有效凭证；不要把它写入诊断日志。
+在「获取 URL 内容」后：
 
-## 构建
+1. 用「获取字典值」从 API 返回中取 `result`，再从 `result` 中取 `code`，得到二维码的完整原文字符串。
+2. 检查返回成功、`result.code` 非空；失败时显示错误提示并停止，不调用二维码显示 Intent。可按需检查 `isBinded`。
+3. 添加「显示天府通乘车码 V3」，**乘车码内容**选择刚刚提取的 `result.code` 魔法变量。首次测试可输入 `TIANFU-GLASS-TEST-NOT-VALID`，验证显示后再切回真实值。
+4. **有效期（秒）**先填 `60`。成功后，可以从 `result` 再读取 `expiresIn`，将字符串数字 `"60"` 转换成数字后传入。
+5. 删除原来用于最终显示的「创建二维码」「快速查看」「显示结果」等操作；只保留新的 App Intent 作为最后展示步骤。
 
-[GitHub Actions · Build unsigned IPA (Xcode 27)](https://github.com/Ssiswent/TianfuGlass/actions/workflows/build-unsigned-ipa.yml)
+可以继续从「快捷指令」列表、主屏幕图标等支持 Snippet 的入口运行。控制中心的 Control 运行环境不一定支持 Snippet，不能由此推断应用出错。
 
-GitHub [Releases](https://github.com/Ssiswent/TianfuGlass/releases) 自动发布 `TianfuGlass-v0.5.2-build8-unsigned.ipa` 等预发布测试版；Actions Artifact 保留备份。未签名 IPA 需要自行签名后才能在普通 iPhone 上安装。
+### 显示与有效期
 
-项目没有上传真实 Cookie、Token、乘车码或天府通 API，测试二维码不可用于乘车。
+- 乘车码原始 UTF-8 文本原样传入 QR 编码器；**不对看似 Base64 的原文进行解码**。
+- 对空白内容、超过 2000 UTF-8 字节的内容、范围之外的有效期（1～3600 秒）提供明确错误。
+- 二维码保持黑白、方形和安静区（quiet zone），二维码模块不会应用模糊玻璃材质。
+- 有效期文本来自传入参数，属于接口提供的**标称有效期**，并非精确实时倒计时；不会自动刷新。每次需要新码时重新运行快捷指令获取。
+- App 不需要访问网络或保存 Cookie。本项目自身没有持久化二维码，但 iOS / 快捷指令的运行上下文由系统管理；不要将生产凭证加入日志、屏幕录制或公开分享的快捷指令。
 
-源码：`Sources/TianfuGlassApp.swift`、`Sources/QRCodeVectorSnippetView.swift`、`Sources/ShowTransitCodeIntent.swift`。
+## 验证状态
+
+已由用户在 iOS 27 真机确认：
+
+- App 内原生文字 Sheet、二维码 Sheet：PASS。
+- 快捷指令 A（纯文字）、C（直接静态视图）：PASS。
+- 快捷指令 D（参数化文字）、B（纯矢量二维码）：**v0.5.0 PASS**。
+- 系统原生 Snippet 入场动画：**用户选择保留**，不抑制系统转场。
+
+**尚未真机验收：v0.6.0 完整真实 `result.code` → `显示天府通乘车码 V3` 路径、闸机扫码与过期后的刷新。** CI 编译不能替代这些测试。先测试无敏感数据的字符串，再接入真实接口。
+
+## GitHub Actions / Releases
+
+GitHub Actions 使用 Xcode 27 编译、打包 unsigned IPA，校验 ZIP 完整性与 SHA-256，并在成功后自动发布到 [GitHub Releases](https://github.com/Ssiswent/TianfuGlass/releases) 的独立 Pre-release，同时保留短期 Artifact 备份。
+
+未签名 IPA 必须经过合适的签名流程，才能安装到普通 iPhone。即使 CI 通过，也不代表乘车码能被闸机接受。
