@@ -90,17 +90,16 @@ struct VectorTransitCodeSnippetView: View {
 
     var body: some View {
         VStack(spacing: 9) {
-            // Keep the symbol itself outside the glass effect. Applying
-            // glassEffect directly to Image made this glyph disappear in
-            // the iOS 27 Shortcuts Snippet (observed in v0.6.5).
-            // Restore the v0.6.4 presentation confirmed on-device.
+            // Avoid interactive glass in a Snippet View archive.
+            // On-device logs reported UIPlatformGlassInteractionRepresentable
+            // archive encoding failure when the main app was already running.
             Image(systemName: "tram.fill")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(.primary)
                 .frame(width: 40, height: 40)
                 .background {
                     Circle()
-                        .glassEffect(.regular, in: .circle)
+                        .fill(Color.primary.opacity(0.10))
                 }
                 .accessibilityLabel("天府通乘车码")
                 .frame(maxWidth: .infinity, alignment: .center)
