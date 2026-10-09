@@ -82,41 +82,26 @@ struct QRCodeModulesShape: Shape {
     }
 }
 
-/// Narrow, stable snippet layout. Snippet overlays are placed by iOS; this
-/// view only defines their contents and never draws glass over QR modules.
+/// Snippet content uses the system-provided Liquid Glass container.
+/// Do not place .glassEffect inside this view: it failed archive encoding
+/// when the main app was already running (confirmed on-device in v0.7.3).
 struct VectorTransitCodeSnippetView: View {
     let matrix: QRCodeMatrix
-    let demo: Bool
 
     var body: some View {
-        VStack(spacing: 9) {
-            // Avoid interactive glass in a Snippet View archive.
-            // On-device logs reported UIPlatformGlassInteractionRepresentable
-            // archive encoding failure when the main app was already running.
+        VStack(spacing: 12) {
             Image(systemName: "tram.fill")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(.primary)
-                .frame(width: 40, height: 40)
-                .background {
-                    Circle()
-                        .fill(Color.primary.opacity(0.10))
-                }
+                .frame(maxWidth: .infinity)
                 .accessibilityLabel("天府通乘车码")
-                .frame(maxWidth: .infinity, alignment: .center)
 
             QRCodeModulesShape(matrix: matrix)
                 .fill(Color.black)
                 .frame(width: 228, height: 228)
                 .background(Color.white, in: RoundedRectangle(cornerRadius: 10))
                 .frame(maxWidth: .infinity)
-                .accessibilityLabel(demo ? "不能用于乘车的演示二维码" : "天府通乘车二维码")
-
-            if demo {
-                Label("离线演示 · 不可乘车", systemImage: "checkmark.shield")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
+                .accessibilityLabel("天府通乘车二维码")
         }
         .padding(12)
         .frame(maxWidth: 320)
